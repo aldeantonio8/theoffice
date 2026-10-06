@@ -789,6 +789,10 @@ function Player({
       receptionCleared,
     );
     pathIndexRef.current = 0;
+
+    if (pathRef.current.length === 0) {
+      onMoveFinished();
+    }
   }, [
     moveRequest,
     unlockedDepartments,
