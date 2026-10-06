@@ -15,7 +15,11 @@ type Panel =
   | "story"
   | "vision"
   | "tour"
-  | "help";
+  | "help"
+  | "projects"
+  | "projectMethod"
+  | "contact"
+  | "meeting";
 
 function dispatchMove(key: string, pressed: boolean) {
   window.dispatchEvent(new KeyboardEvent(pressed ? "keydown" : "keyup", { key }));
@@ -66,6 +70,30 @@ const panelCopy: Record<
     title: "How The Office works.",
     body: "Walk close to a team member. When the prompt appears, press E or click the person. Every conversation replaces a traditional website section.",
     items: ["WASD / arrows to move", "E to talk", "Click a person on desktop", "Directional controls on mobile"],
+  },
+  projects: {
+    eyebrow: "Projects Room",
+    title: "Selected work lives here.",
+    body: "Every case study can become an exhibit inside this room, combining context, process, visual work and measurable outcomes.",
+    items: ["Case 01 — Brand system", "Case 02 — Product experience", "Case 03 — Digital platform", "Case 04 — Campaign"],
+  },
+  projectMethod: {
+    eyebrow: "Projects Room",
+    title: "From brief to outcome.",
+    body: "The room can show not only finished work but also how decisions were made, what constraints existed and what changed after delivery.",
+    items: ["Context", "Challenge", "Approach", "Execution", "Result"],
+  },
+  contact: {
+    eyebrow: "Meeting Room",
+    title: "Start a conversation.",
+    body: "The Meeting Room acts as the contact section of the portfolio. A production version can connect this flow to email, CRM or Supabase.",
+    items: ["New project", "Partnership", "General enquiry", "Collaboration"],
+  },
+  meeting: {
+    eyebrow: "Meeting Room",
+    title: "Book time inside The Office.",
+    body: "This can become a lightweight scheduling flow where visitors choose a purpose, preferred date and contact information without leaving the experience.",
+    items: ["Discovery call", "Project review", "Partnership meeting", "Portfolio walkthrough"],
   },
 };
 
@@ -132,6 +160,10 @@ export default function OfficeExperience() {
       "Our vision": "vision",
       "Start tour": "tour",
       "How does this work?": "help",
+      "View case studies": "projects",
+      "How projects work": "projectMethod",
+      "Start a conversation": "contact",
+      "Book a meeting": "meeting",
     };
 
     openPanel(actions[action] ?? null);
