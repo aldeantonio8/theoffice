@@ -227,13 +227,12 @@ export default function OfficeExperience() {
     window.setTimeout(() => setEntered(true), 620);
   };
 
-  const submitDoorCredentials = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!restrictedDepartment || accessLoading) return;
-
-    const form = new FormData(event.currentTarget);
-    const email = String(form.get("accessEmail") || "").trim();
-    const password = String(form.get("accessPassword") || "");
+  const submitDoorCredentials = async (
+    department: Department,
+    email: string,
+    password: string,
+  ) => {
+    if (accessLoading) return;
 
     setAccessError("");
     setAccessLoading(true);
@@ -245,7 +244,7 @@ export default function OfficeExperience() {
         body: JSON.stringify({
           email,
           password,
-          departmentId: restrictedDepartment.id,
+          departmentId: department.id,
         }),
       });
 
@@ -259,9 +258,10 @@ export default function OfficeExperience() {
         return;
       }
 
-      const departmentId = restrictedDepartment.id;
       setUnlockedDepartments((current) =>
-        current.includes(departmentId) ? current : [...current, departmentId],
+        current.includes(department.id)
+          ? current
+          : [...current, department.id],
       );
       setRestrictedDepartment(null);
       setAccessError("");
@@ -334,6 +334,14 @@ export default function OfficeExperience() {
           activeDepartmentId={selected?.id ?? null}
           unlockedDepartments={unlockedDepartments}
           onRestrictedAttempt={requestRestrictedAccess}
+          restrictedDepartmentId={restrictedDepartment?.id ?? null}
+          accessError={accessError}
+          accessLoading={accessLoading}
+          onSubmitCredentials={submitDoorCredentials}
+          onCloseAccess={() => {
+            setRestrictedDepartment(null);
+            setAccessError("");
+          }}
           receptionCleared={receptionCleared}
         />
 
@@ -579,70 +587,6 @@ export default function OfficeExperience() {
           </aside>
         ) : null}
       </section>
-
-      {restrictedDepartment && (
-        <div className="access-backdrop" role="dialog" aria-modal="true" aria-label="Acesso restrito">
-          <div className="access-panel">
-            <div className="access-panel-head">
-              <div>
-                <span>PORTA RESTRITA</span>
-                <h2>{restrictedDepartment.label}</h2>
-              </div>
-              <button
-                type="button"
-                aria-label="Fechar acesso"
-                onClick={() => {
-                  setRestrictedDepartment(null);
-                  setAccessError("");
-                }}
-              >
-                ×
-              </button>
-            </div>
-
-            <p>
-              Esta área requer autorização. Introduza o email e a password de acesso
-              para desbloquear a porta.
-            </p>
-
-            <form className="access-form" onSubmit={submitDoorCredentials}>
-              <label>
-                Email
-                <input
-                  name="accessEmail"
-                  type="email"
-                  placeholder="email@empresa.com"
-                  autoComplete="username"
-                  required
-                  autoFocus
-                />
-              </label>
-
-              <label>
-                Password
-                <input
-                  name="accessPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  required
-                />
-              </label>
-
-              {accessError && <p className="access-error">{accessError}</p>}
-
-              <button type="submit" disabled={accessLoading}>
-                {accessLoading ? "A validar..." : "Desbloquear porta"}
-                <span>→</span>
-              </button>
-            </form>
-
-            <small>
-              As credenciais são validadas no servidor e não ficam expostas no código do navegador.
-            </small>
-          </div>
-        </div>
-      )}
 
       {panel && (
         <div className="modal-backdrop" role="dialog" aria-modal="true">
