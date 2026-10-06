@@ -1,6 +1,6 @@
 "use client";
 
-import { ContactShadows, Html, SoftShadows, Text } from "@react-three/drei";
+import { Html, Text } from "@react-three/drei";
 import { Canvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -279,33 +279,11 @@ function Wall({
   size: [number, number, number];
   color?: string;
 }) {
-  const horizontal = size[0] > size[2];
-
   return (
-    <group position={position}>
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={size} />
-        <meshStandardMaterial color={color} roughness={0.92} />
-      </mesh>
-
-      <mesh
-        position={[
-          0,
-          -size[1] / 2 + 0.075,
-          horizontal ? size[2] / 2 + 0.012 : 0,
-        ]}
-        castShadow
-      >
-        <boxGeometry
-          args={
-            horizontal
-              ? [size[0] + 0.01, 0.15, 0.035]
-              : [0.035, 0.15, size[2] + 0.01]
-          }
-        />
-        <meshStandardMaterial color="#c8c5bb" roughness={0.8} />
-      </mesh>
-    </group>
+    <mesh position={position} castShadow receiveShadow>
+      <boxGeometry args={size} />
+      <meshStandardMaterial color={color} roughness={0.92} />
+    </mesh>
   );
 }
 
@@ -495,16 +473,12 @@ function GlassDoor({
         <group position={[doorWidth / 2, 0, 0]}>
           <mesh position={[0, doorHeight / 2, 0]} castShadow receiveShadow>
             <boxGeometry args={[doorWidth, doorHeight, 0.055]} />
-            <meshPhysicalMaterial
-              color={restricted ? "#81908c" : "#b9ceca"}
+            <meshStandardMaterial
+              color={restricted ? "#8f9d99" : "#b9ceca"}
               transparent
-              opacity={restricted ? 0.52 : 0.38}
-              roughness={0.14}
-              metalness={0.04}
-              transmission={0.08}
-              thickness={0.035}
-              clearcoat={0.25}
-              clearcoatRoughness={0.18}
+              opacity={restricted ? 0.48 : 0.34}
+              roughness={0.26}
+              metalness={0.02}
             />
           </mesh>
 
@@ -541,11 +515,11 @@ function GlassDoor({
           {/* Frosted privacy band */}
           <mesh position={[0, 1.08, 0.035]}>
             <boxGeometry args={[0.78, 0.34, 0.012]} />
-            <meshPhysicalMaterial
+            <meshStandardMaterial
               color="#dce2df"
               transparent
-              opacity={0.34}
-              roughness={0.76}
+              opacity={0.3}
+              roughness={0.78}
             />
           </mesh>
         </group>
@@ -1292,10 +1266,10 @@ function Player({
 function CeilingLights() {
   return (
     <>
-      {[-11.5, -7.5, -3.5, 0.5, 2.5].map((z) => (
+      {[-8.5, -1.5].map((z) => (
         <group key={z}>
-          <pointLight position={[-4.6, 4.2, z]} intensity={16} distance={8} decay={2.1} />
-          <pointLight position={[4.6, 4.2, z]} intensity={16} distance={8} decay={2.1} />
+          <pointLight position={[-4.2, 3.4, z]} intensity={8} distance={9} decay={2} />
+          <pointLight position={[4.2, 3.4, z]} intensity={8} distance={9} decay={2} />
         </group>
       ))}
     </>
@@ -1374,14 +1348,13 @@ function World({
     <>
       <color attach="background" args={["#e7e6df"]} />
       <fog attach="fog" args={["#e7e6df", 24, 48]} />
-      <SoftShadows size={18} samples={12} focus={0.45} />
       <hemisphereLight args={["#f6f2e8", "#73786f", 1.5]} />
       <ambientLight intensity={0.58} />
       <directionalLight
         position={[8, 14, 8]}
-        intensity={3.1}
+        intensity={2.25}
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[1024, 1024]}
       />
       <CeilingLights />
 
@@ -1498,15 +1471,6 @@ function World({
         </mesh>
       ))}
 
-      <ContactShadows
-        position={[0, 0.03, -5.5]}
-        opacity={0.34}
-        scale={19}
-        blur={2.7}
-        far={8}
-        frames={1}
-      />
-
       {moveRequest && (
         <mesh
           rotation={[-Math.PI / 2, 0, 0]}
@@ -1575,7 +1539,7 @@ export default function OfficeScene({
   };
 
   return (
-    <Canvas shadows dpr={[1, 1.6]} camera={{ position: [6.5, 8.5, 12], fov: 42 }}>
+    <Canvas shadows dpr={[1, 1.25]} camera={{ position: [6.5, 8.5, 12], fov: 42 }}>
       <World
         selected={selected}
         nearby={nearby}
