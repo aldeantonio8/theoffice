@@ -5,7 +5,7 @@
 :root {
   --ink: #171b17;
   --paper: #e9ece5;
-  --panel: rgba(244, 246, 240, 0.92);
+  --panel: rgba(244, 246, 240, 0.94);
   --line: rgba(23, 27, 23, 0.18);
   --acid: #d9ff65;
 }
@@ -106,7 +106,7 @@ button {
   display: grid;
   place-items: center;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.48);
+  background: rgba(255, 255, 255, 0.52);
 }
 
 .controls-separator {
@@ -124,7 +124,7 @@ button {
 }
 
 .npc-tag {
-  min-width: 92px;
+  min-width: 94px;
   padding: 6px 8px;
   display: grid;
   gap: 2px;
@@ -135,6 +135,7 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.22);
   white-space: nowrap;
   transition: 160ms ease;
+  pointer-events: none;
 }
 
 .npc-tag strong {
@@ -162,7 +163,7 @@ button {
   gap: 9px;
   padding: 9px 13px 9px 9px;
   border: 1px solid var(--ink);
-  background: rgba(244, 246, 240, 0.92);
+  background: rgba(244, 246, 240, 0.94);
   cursor: pointer;
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
 }
@@ -203,6 +204,7 @@ button {
 .dialogue-head button,
 .form-panel-head > button {
   width: 30px;
+  min-width: 30px;
   height: 30px;
   border: 1px solid var(--line);
   background: transparent;
@@ -258,6 +260,7 @@ button {
   background: transparent;
   cursor: pointer;
   text-align: left;
+  transition: 140ms ease;
 }
 
 .department-actions button:hover {
@@ -280,12 +283,13 @@ button {
 }
 
 .form-panel {
-  width: min(760px, 100%);
-  max-height: min(760px, calc(100svh - 48px));
+  width: min(790px, 100%);
+  max-height: min(790px, calc(100svh - 48px));
   overflow: auto;
   padding: 26px;
   background: #f1f2ed;
   border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 30px 120px rgba(0, 0, 0, 0.24);
 }
 
 .form-panel-head {
@@ -297,7 +301,7 @@ button {
 
 .form-panel-head h2 {
   margin: 0;
-  max-width: 520px;
+  max-width: 590px;
   font-size: clamp(38px, 6vw, 72px);
   font-weight: 500;
   line-height: 0.9;
@@ -388,12 +392,55 @@ button {
   opacity: 0.7;
 }
 
-.form-success button {
+.form-success button,
+.panel-back {
   margin-top: 20px;
   padding: 14px 18px;
   border: 1px solid var(--ink);
   background: var(--acid);
   cursor: pointer;
+}
+
+.info-panel-body {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+
+.info-panel-body > p {
+  max-width: 620px;
+  margin: 0 0 30px;
+  font-size: 16px;
+  line-height: 1.55;
+  opacity: 0.72;
+}
+
+.info-grid {
+  border-top: 1px solid var(--line);
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  align-items: center;
+  min-height: 54px;
+  border-bottom: 1px solid var(--line);
+}
+
+.info-row span {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+}
+
+.info-row strong {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.panel-back {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
 }
 
 .intro {
@@ -540,8 +587,17 @@ button {
     touch-action: none;
   }
 
+  .modal-backdrop {
+    padding: 10px;
+  }
+
   .form-panel {
     padding: 20px;
+    max-height: calc(100svh - 20px);
+  }
+
+  .form-panel-head h2 {
+    font-size: 42px;
   }
 
   .cv-form {
