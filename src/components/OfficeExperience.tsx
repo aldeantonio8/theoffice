@@ -157,6 +157,7 @@ export default function OfficeExperience() {
   const [visited, setVisited] = useState<Department["id"][]>([]);
   const [entering, setEntering] = useState(false);
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
+  const [visitorReady, setVisitorReady] = useState(false);
 
   const handleSelect = (department: Department) => {
     setSelected(department);
@@ -193,9 +194,27 @@ export default function OfficeExperience() {
   }, [panel, directoryOpen, selected, selectedProject]);
 
   const enterOffice = () => {
-    if (entering) return;
+    if (entering || !visitorReady) return;
     setEntering(true);
     window.setTimeout(() => setEntered(true), 620);
+  };
+
+  const handleVisitorCheckIn = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const form = new FormData(event.currentTarget);
+    const visitor = {
+      nome: String(form.get("visitorName") || "").trim(),
+      email: String(form.get("visitorEmail") || "").trim(),
+      empresa: String(form.get("visitorCompany") || "").trim(),
+      motivo: String(form.get("visitorPurpose") || "").trim(),
+      checkedInAt: new Date().toISOString(),
+    };
+
+    if (!visitor.nome || !visitor.email || !visitor.motivo) return;
+
+    sessionStorage.setItem("theoffice-visitor", JSON.stringify(visitor));
+    setVisitorReady(true);
   };
 
   const openPanel = (next: Panel) => {
@@ -663,13 +682,90 @@ export default function OfficeExperience() {
               The Office.
             </h1>
             <p className="intro-copy">
-              Entre. Percorra os departamentos, conheça as pessoas e descubra a empresa
-              como se estivesse realmente lá.
+              Antes de entrar, faça um pequeno check-in na receção. Depois poderá percorrer
+              os departamentos, conhecer as pessoas e explorar a empresa.
             </p>
-            <button className="enter-button" type="button" onClick={enterOffice} disabled={entering}>
+
+            {!visitorReady ? (
+              <form className="visitor-checkin" onSubmit={handleVisitorCheckIn}>
+                <div className="visitor-checkin-head">
+                  <span>CHECK-IN DE VISITANTE</span>
+                  <strong>Identifique-se para entrar</strong>
+                </div>
+
+                <label>
+                  Nome completo *
+                  <input
+                    name="visitorName"
+                    type="text"
+                    placeholder="O seu nome"
+                    autoComplete="name"
+                    required
+                  />
+                </label>
+
+                <label>
+                  Email *
+                  <input
+                    name="visitorEmail"
+                    type="email"
+                    placeholder="voce@email.com"
+                    autoComplete="email"
+                    required
+                  />
+                </label>
+
+                <label>
+                  Empresa
+                  <input
+                    name="visitorCompany"
+                    type="text"
+                    placeholder="Empresa ou organização"
+                    autoComplete="organization"
+                  />
+                </label>
+
+                <label>
+                  Motivo da visita *
+                  <select name="visitorPurpose" defaultValue="" required>
+                    <option value="" disabled>
+                      Selecione uma opção
+                    </option>
+                    <option value="conhecer-empresa">Conhecer a empresa</option>
+                    <option value="servicos">Conhecer os serviços</option>
+                    <option value="carreiras">Carreiras / emprego</option>
+                    <option value="procurement">Procurement / fornecimento</option>
+                    <option value="projeto">Novo projeto / parceria</option>
+                    <option value="outro">Outro</option>
+                  </select>
+                </label>
+
+                <p className="visitor-note">
+                  Ao continuar, estes dados são usados apenas para identificar a sua visita.
+                  Nesta fase do protótipo ficam guardados apenas nesta sessão do navegador.
+                </p>
+
+                <button className="checkin-button" type="submit">
+                  Fazer check-in <span>→</span>
+                </button>
+              </form>
+            ) : (
+              <div className="visitor-approved">
+                <span>CHECK-IN CONCLUÍDO</span>
+                <strong>Pode entrar no escritório.</strong>
+              </div>
+            )}
+
+            <button
+              className="enter-button"
+              type="button"
+              onClick={enterOffice}
+              disabled={entering || !visitorReady}
+            >
               {entering ? "A abrir as portas..." : "Entrar no escritório"}
               <span>→</span>
             </button>
+
             <div className="intro-controls">
               <span>WASD para mover</span>
               <span>E para interagir</span>
