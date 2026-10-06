@@ -14,6 +14,7 @@ type Props = {
   activeDepartmentId: Department["id"] | null;
   unlockedDepartments: Department["id"][];
   onRestrictedAttempt: (department: Department) => void;
+  receptionCleared: boolean;
 };
 
 const WALL_HEIGHT = 1.6;
@@ -268,14 +269,10 @@ function NPC({
   department,
   active,
   onSelect,
-  unlocked,
-  onRestrictedAttempt,
 }: {
   department: Department;
   active: boolean;
   onSelect: (department: Department) => void;
-  unlocked: boolean;
-  onRestrictedAttempt: (department: Department) => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const ref = useRef<THREE.Group>(null);
@@ -438,6 +435,7 @@ function Room({
   onSelect,
   unlocked,
   onRestrictedAttempt,
+  receptionCleared,
 }: {
   department: Department;
   active: boolean;
@@ -552,12 +550,14 @@ function Player({
   onInteract,
   focusDepartment,
   unlockedDepartments,
+  receptionCleared,
 }: {
   onNearby: Props["onNearby"];
   onAreaChange: Props["onAreaChange"];
   onInteract: Props["onSelect"];
   focusDepartment: Department | null;
   unlockedDepartments: Set<Department["id"]>;
+  receptionCleared: boolean;
 }) {
   const ref = useRef<THREE.Group>(null);
   const keys = useRef<Record<string, boolean>>({});
@@ -616,7 +616,16 @@ function Player({
       const nextZ = p.z + (dz / magnitude) * speed;
 
       if (isWalkable(nextX, p.z, unlockedDepartments)) p.x = nextX;
-      if (isWalkable(p.x, nextZ, unlockedDepartments)) p.z = nextZ;
+
+      const blockedByReception =
+        !receptionCleared && nextZ < 0.58;
+
+      if (
+        !blockedByReception &&
+        isWalkable(p.x, nextZ, unlockedDepartments)
+      ) {
+        p.z = nextZ;
+      }
 
       ref.current.rotation.y = Math.atan2(dx, dz);
     }
@@ -725,6 +734,7 @@ function World({
   onAreaChange: Props["onAreaChange"];
   unlockedDepartments: Set<Department["id"]>;
   onRestrictedAttempt: Props["onRestrictedAttempt"];
+  receptionCleared: boolean;
 }) {
   const grid = useMemo(() => new THREE.GridHelper(28, 28, "#8b8e86", "#c4c7bf"), []);
 
@@ -768,6 +778,28 @@ function World({
       <Wall position={[-9.05, 0.8, -5.15]} size={[0.12, 1.6, 21.5]} color="#bfc2ba" />
       <Wall position={[9.05, 0.8, -5.15]} size={[0.12, 1.6, 21.5]} color="#bfc2ba" />
 
+      <group position={[0, 0, 0.56]}>
+        <mesh position={[-1.2, 0.55, 0]} castShadow>
+          <boxGeometry args={[0.1, 1.1, 0.1]} />
+          <meshStandardMaterial color="#343834" />
+        </mesh>
+        <mesh position={[1.2, 0.55, 0]} castShadow>
+          <boxGeometry args={[0.1, 1.1, 0.1]} />
+          <meshStandardMaterial color="#343834" />
+        </mesh>
+        {!receptionCleared && (
+          <>
+            <mesh position={[0, 0.78, 0]} castShadow>
+              <boxGeometry args={[2.35, 0.08, 0.08]} />
+              <meshStandardMaterial color="#171b17" />
+            </mesh>
+            <Html position={[0, 1.25, 0]} center distanceFactor={9}>
+              <div className="reception-gate-label">FALE COM A MIA PARA CONTINUAR</div>
+            </Html>
+          </>
+        )}
+      </group>
+
       {departments.map((department) => (
         <Room
           key={department.id}
@@ -796,6 +828,7 @@ function World({
         onInteract={onSelect}
         focusDepartment={selected}
         unlockedDepartments={unlockedDepartments}
+        receptionCleared={receptionCleared}
       />
     </>
   );
@@ -808,6 +841,7 @@ export default function OfficeScene({
   activeDepartmentId,
   unlockedDepartments,
   onRestrictedAttempt,
+  receptionCleared,
 }: Props) {
   const [selected, setSelected] = useState<Department | null>(null);
   const [nearby, setNearby] = useState<Department | null>(null);
@@ -844,6 +878,7 @@ export default function OfficeScene({
         onAreaChange={onAreaChange}
         unlockedDepartments={unlockedSet}
         onRestrictedAttempt={onRestrictedAttempt}
+        receptionCleared={receptionCleared}
       />
     </Canvas>
   );
