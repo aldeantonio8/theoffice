@@ -376,7 +376,8 @@ export default function OfficeExperience() {
                   ].filter(Boolean).join(" ")}
                   title={department.label}
                   aria-label={department.label}
-                  onClick={() => handleSelect(department)}
+                  tabIndex={-1}
+                  aria-disabled="true"
                 >
                   <span>{department.label}</span>
                 </button>
