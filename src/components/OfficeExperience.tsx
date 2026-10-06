@@ -352,6 +352,10 @@ export default function OfficeExperience() {
                     `mini-room--${department.id}`,
                     visited.includes(department.id) ? "is-visited" : "",
                     currentArea?.id === department.id ? "is-current" : "",
+                    department.requiresCredentials &&
+                    !unlockedDepartments.includes(department.id)
+                      ? "is-locked"
+                      : "",
                   ].filter(Boolean).join(" ")}
                   title={department.label}
                   aria-label={department.label}
@@ -382,6 +386,12 @@ export default function OfficeExperience() {
               <button
                 key={department.id}
                 type="button"
+                className={
+                  department.requiresCredentials &&
+                  !unlockedDepartments.includes(department.id)
+                    ? "is-locked"
+                    : ""
+                }
                 onClick={() => {
                   handleSelect(department);
                   setDirectoryOpen(false);
