@@ -27,8 +27,8 @@ type Props = {
   receptionCleared: boolean;
 };
 
-const WALL_HEIGHT = 2.65;
-const WALL_THICKNESS = 0.16;
+const WALL_HEIGHT = 1.62;
+const WALL_THICKNESS = 0.13;
 
 function isWalkable(
   x: number,
@@ -473,7 +473,7 @@ function GlassDoor({
       {/* Metal frame fixed to the wall */}
       <mesh position={[-doorWidth / 2 - frame / 2, doorHeight / 2, 0]} castShadow>
         <boxGeometry args={[frame, doorHeight + frame * 2, 0.095]} />
-        <meshStandardMaterial color="#282b29" metalness={0.58} roughness={0.32} />
+        <meshStandardMaterial color="#3a3d3a" metalness={0.52} roughness={0.34} />
       </mesh>
       <mesh position={[doorWidth / 2 + frame / 2, doorHeight / 2, 0]} castShadow>
         <boxGeometry args={[frame, doorHeight + frame * 2, 0.095]} />
@@ -819,10 +819,6 @@ function Room({
           <Wall
             position={[innerWallX, WALL_HEIGHT / 2, 1.42]}
             size={[WALL_THICKNESS, WALL_HEIGHT, 1.46]}
-          />
-          <Wall
-            position={[innerWallX, 2.48, 0.0]}
-            size={[WALL_THICKNESS, 0.34, 1.42]}
           />
           <GlassDoor
             position={[innerWallX + (isLeft ? -0.04 : 0.04), 0, 0.35]}
