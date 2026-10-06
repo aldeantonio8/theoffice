@@ -78,6 +78,7 @@ export default function OfficeExperience() {
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [currentArea, setCurrentArea] = useState<Department | null>(null);
   const [visited, setVisited] = useState<Department["id"][]>([]);
+  const [entering, setEntering] = useState(false);
 
   const handleSelect = (department: Department) => {
     setSelected(department);
@@ -107,6 +108,12 @@ export default function OfficeExperience() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [panel, directoryOpen, selected]);
+
+  const enterOffice = () => {
+    if (entering) return;
+    setEntering(true);
+    window.setTimeout(() => setEntered(true), 620);
+  };
 
   const openPanel = (next: Panel) => {
     setSubmitted(false);
@@ -166,9 +173,39 @@ export default function OfficeExperience() {
         />
 
         <div className="area-indicator">
-          <span>{currentArea ? "You are in" : "You are in"}</span>
+          <span>You are in</span>
           <strong>{currentArea?.label ?? "Main corridor"}</strong>
         </div>
+
+        {entered && (
+          <aside className="mini-map" aria-label="Office mini map">
+            <div className="mini-map-head">
+              <span>Office map</span>
+              <strong>{visited.length}/{departments.length}</strong>
+            </div>
+            <div className="mini-map-grid">
+              {departments.map((department) => (
+                <button
+                  key={department.id}
+                  type="button"
+                  className={[
+                    "mini-room",
+                    `mini-room--${department.id}`,
+                    visited.includes(department.id) ? "is-visited" : "",
+                    currentArea?.id === department.id ? "is-current" : "",
+                  ].filter(Boolean).join(" ")}
+                  title={department.label}
+                  aria-label={department.label}
+                  onClick={() => handleSelect(department)}
+                >
+                  <span>{department.label}</span>
+                </button>
+              ))}
+              <div className="mini-corridor" aria-hidden="true" />
+              <div className="mini-you" aria-hidden="true">YOU</div>
+            </div>
+          </aside>
+        )}
 
         <button
           className="directory-toggle"
@@ -463,7 +500,7 @@ export default function OfficeExperience() {
       )}
 
       {!entered && (
-        <div className="intro">
+        <div className={`intro ${entering ? "intro--leaving" : ""}`}>
           <div className="intro-count">01 — ENTER</div>
           <div className="intro-content">
             <p className="intro-kicker">A portfolio you can walk through.</p>
@@ -476,8 +513,8 @@ export default function OfficeExperience() {
               Step inside. Walk through the departments, meet the people and discover the company
               like you were actually there.
             </p>
-            <button className="enter-button" type="button" onClick={() => setEntered(true)}>
-              Enter the office
+            <button className="enter-button" type="button" onClick={enterOffice} disabled={entering}>
+              {entering ? "Opening the doors..." : "Enter the office"}
               <span>→</span>
             </button>
             <div className="intro-controls">
