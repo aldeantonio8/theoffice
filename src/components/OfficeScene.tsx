@@ -255,6 +255,20 @@ function getApproachPoint(department: Department) {
   return new THREE.Vector3(x < 0 ? x + 1.05 : x - 1.05, 0, z);
 }
 
+function getDoorWorldPosition(department: Department) {
+  const [x, , z] = department.position;
+  const [width] = department.size;
+  const innerWallX = x < 0 ? width / 2 : -width / 2;
+
+  return new THREE.Vector3(x + innerWallX, 0, z + 0.35);
+}
+
+function getDoorApproachPoint(department: Department) {
+  const door = getDoorWorldPosition(department);
+  door.x += department.position[0] < 0 ? 0.85 : -0.85;
+  return door;
+}
+
 function Wall({
   position,
   size,
@@ -621,6 +635,7 @@ function Room({
   accessLoading,
   onSubmitCredentials,
   onCloseAccess,
+  doorNearby,
 }: {
   department: Department;
   active: boolean;
@@ -632,6 +647,7 @@ function Room({
   accessLoading: boolean;
   onSubmitCredentials: Props["onSubmitCredentials"];
   onCloseAccess: Props["onCloseAccess"];
+  doorNearby: boolean;
 }) {
   const [x, , z] = department.position;
   const [w, , d] = department.size;
@@ -650,7 +666,7 @@ function Room({
         onClick={(event) => {
           event.stopPropagation();
           if (department.requiresCredentials && !unlocked) {
-            onRestrictedAttempt(department);
+            onMove(getDoorApproachPoint(department));
             return;
           }
           onMove(event.point.clone());
@@ -798,18 +814,20 @@ function Room({
                   <span>→</span>
                 </button>
               </form>
-            ) : (
+            ) : doorNearby ? (
               <button
-                className="door-access-badge"
+                className="door-access-pop"
                 type="button"
                 onClick={(event) => {
                   event.stopPropagation();
                   onRestrictedAttempt(department);
                 }}
               >
-                🔒 ACESSO RESTRITO
+                <span>PORTA RESTRITA</span>
+                <strong>Solicite acesso no portal</strong>
+                <small><kbd>ENTER</kbd> Pedir acesso</small>
               </button>
-            )}
+            ) : null}
           </Html>
         </>
       )}
@@ -829,6 +847,8 @@ function Player({
   moveRequest,
   onMoveFinished,
   onCancelMove,
+  onLockedDoorNearby,
+  onRequestAccess,
 }: {
   onNearby: Props["onNearby"];
   onAreaChange: Props["onAreaChange"];
@@ -839,12 +859,16 @@ function Player({
   moveRequest: MoveRequest | null;
   onMoveFinished: () => void;
   onCancelMove: () => void;
+  onLockedDoorNearby: (department: Department | null) => void;
+  onRequestAccess: (department: Department) => void;
 }) {
   const ref = useRef<THREE.Group>(null);
   const keys = useRef<Record<string, boolean>>({});
   const nearbyRef = useRef<Department | null>(null);
   const lastNearbyId = useRef<string | null>(null);
   const lastAreaId = useRef<string | null>(null);
+  const lastLockedDoorId = useRef<string | null>(null);
+  const lockedDoorRef = useRef<Department | null>(null);
   const lastMoving = useRef(false);
   const pathRef = useRef<THREE.Vector3[]>([]);
   const pathIndexRef = useRef(0);
@@ -854,8 +878,23 @@ function Player({
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+
       const key = event.key.toLowerCase();
       keys.current[key] = true;
+
+      if (key === "enter" && lockedDoorRef.current) {
+        event.preventDefault();
+        onRequestAccess(lockedDoorRef.current);
+        return;
+      }
 
       if (
         ["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(
@@ -881,7 +920,7 @@ function Player({
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
     };
-  }, [onCancelMove, onInteract]);
+  }, [onCancelMove, onInteract, onRequestAccess]);
 
   useEffect(() => {
     if (!moveRequest || !ref.current || focusDepartment) return;
@@ -1016,6 +1055,34 @@ function Player({
     p.x = THREE.MathUtils.clamp(p.x, PATH_MIN_X, PATH_MAX_X);
     p.z = THREE.MathUtils.clamp(p.z, PATH_MIN_Z, PATH_MAX_Z);
 
+    let lockedDoor: Department | null = null;
+    let lockedDoorDistance = 1.55;
+
+    for (const department of departments) {
+      if (
+        !department.requiresCredentials ||
+        unlockedDepartments.has(department.id)
+      ) {
+        continue;
+      }
+
+      const door = getDoorWorldPosition(department);
+      const distance = Math.hypot(p.x - door.x, p.z - door.z);
+
+      if (distance < lockedDoorDistance) {
+        lockedDoor = department;
+        lockedDoorDistance = distance;
+      }
+    }
+
+    lockedDoorRef.current = lockedDoor;
+    const lockedDoorId = lockedDoor?.id ?? null;
+
+    if (lockedDoorId !== lastLockedDoorId.current) {
+      lastLockedDoorId.current = lockedDoorId;
+      onLockedDoorNearby(lockedDoor);
+    }
+
     let nearest: Department | null = null;
     let nearestDistance = 1.72;
 
@@ -1132,6 +1199,7 @@ function World({
 }) {
   const grid = useMemo(() => new THREE.GridHelper(28, 28, "#8b8e86", "#c4c7bf"), []);
   const [moveRequest, setMoveRequest] = useState<MoveRequest | null>(null);
+  const [nearLockedDoor, setNearLockedDoor] = useState<Department | null>(null);
   const moveSequence = useRef(0);
 
   const requestMove = (point: THREE.Vector3, interact?: Department) => {
@@ -1257,6 +1325,7 @@ function World({
           accessLoading={accessLoading}
           onSubmitCredentials={onSubmitCredentials}
           onCloseAccess={onCloseAccess}
+          doorNearby={nearLockedDoor?.id === department.id}
         />
       ))}
 
@@ -1289,6 +1358,8 @@ function World({
         moveRequest={moveRequest}
         onMoveFinished={() => setMoveRequest(null)}
         onCancelMove={() => setMoveRequest(null)}
+        onLockedDoorNearby={setNearLockedDoor}
+        onRequestAccess={onRestrictedAttempt}
       />
     </>
   );
