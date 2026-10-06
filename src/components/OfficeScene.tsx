@@ -1,6 +1,6 @@
 "use client";
 
-import { Html, Text } from "@react-three/drei";
+import { ContactShadows, Html, SoftShadows, Text } from "@react-three/drei";
 import { Canvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -27,8 +27,8 @@ type Props = {
   receptionCleared: boolean;
 };
 
-const WALL_HEIGHT = 1.6;
-const WALL_THICKNESS = 0.12;
+const WALL_HEIGHT = 2.65;
+const WALL_THICKNESS = 0.16;
 
 function isWalkable(
   x: number,
@@ -273,17 +273,39 @@ function getDoorApproachPoint(department: Department) {
 function Wall({
   position,
   size,
-  color = "#f2f1ea",
+  color = "#ecebe4",
 }: {
   position: [number, number, number];
   size: [number, number, number];
   color?: string;
 }) {
+  const horizontal = size[0] > size[2];
+
   return (
-    <mesh position={position} castShadow receiveShadow>
-      <boxGeometry args={size} />
-      <meshStandardMaterial color={color} roughness={0.9} />
-    </mesh>
+    <group position={position}>
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={size} />
+        <meshStandardMaterial color={color} roughness={0.92} />
+      </mesh>
+
+      <mesh
+        position={[
+          0,
+          -size[1] / 2 + 0.075,
+          horizontal ? size[2] / 2 + 0.012 : 0,
+        ]}
+        castShadow
+      >
+        <boxGeometry
+          args={
+            horizontal
+              ? [size[0] + 0.01, 0.15, 0.035]
+              : [0.035, 0.15, size[2] + 0.01]
+          }
+        />
+        <meshStandardMaterial color="#c8c5bb" roughness={0.8} />
+      </mesh>
+    </group>
   );
 }
 
@@ -423,40 +445,133 @@ function GlassDoor({
   position,
   rotation = 0,
   open = false,
+  restricted = false,
 }: {
   position: [number, number, number];
   rotation?: number;
   open?: boolean;
+  restricted?: boolean;
 }) {
-  const ref = useRef<THREE.Group>(null);
+  const hinge = useRef<THREE.Group>(null);
+  const doorWidth = 0.96;
+  const doorHeight = 2.18;
+  const frame = 0.075;
 
-  useFrame(() => {
-    if (!ref.current) return;
-    const direction = rotation > 0 ? 1 : -1;
-    const target = open ? rotation + direction * 0.82 : rotation;
-    ref.current.rotation.y = THREE.MathUtils.lerp(ref.current.rotation.y, target, 0.08);
+  useFrame((_, delta) => {
+    if (!hinge.current) return;
+    const target = open ? (rotation > 0 ? -1.08 : 1.08) : 0;
+    hinge.current.rotation.y = THREE.MathUtils.damp(
+      hinge.current.rotation.y,
+      target,
+      7,
+      delta,
+    );
   });
 
   return (
-    <group ref={ref} position={position} rotation={[0, rotation, 0]}>
-      <mesh position={[0, 0.78, 0]} castShadow>
-        <boxGeometry args={[0.82, 1.5, 0.035]} />
-        <meshPhysicalMaterial
-          color="#bed4d1"
-          transparent
-          opacity={0.32}
-          roughness={0.2}
-          metalness={0.08}
-        />
+    <group position={position} rotation={[0, rotation, 0]}>
+      {/* Metal frame fixed to the wall */}
+      <mesh position={[-doorWidth / 2 - frame / 2, doorHeight / 2, 0]} castShadow>
+        <boxGeometry args={[frame, doorHeight + frame * 2, 0.095]} />
+        <meshStandardMaterial color="#282b29" metalness={0.58} roughness={0.32} />
       </mesh>
-      <mesh position={[0.31, 0.78, 0.035]}>
-        <boxGeometry args={[0.035, 1.5, 0.035]} />
-        <meshStandardMaterial color="#363936" />
+      <mesh position={[doorWidth / 2 + frame / 2, doorHeight / 2, 0]} castShadow>
+        <boxGeometry args={[frame, doorHeight + frame * 2, 0.095]} />
+        <meshStandardMaterial color="#282b29" metalness={0.58} roughness={0.32} />
       </mesh>
-      <mesh position={[0.18, 0.82, 0.08]}>
-        <sphereGeometry args={[0.04, 8, 8]} />
-        <meshStandardMaterial color="#171b17" />
+      <mesh position={[0, doorHeight + frame / 2, 0]} castShadow>
+        <boxGeometry args={[doorWidth + frame * 2, frame, 0.095]} />
+        <meshStandardMaterial color="#282b29" metalness={0.58} roughness={0.32} />
       </mesh>
+
+      {/* Threshold */}
+      <mesh position={[0, 0.025, 0]} receiveShadow>
+        <boxGeometry args={[doorWidth + 0.18, 0.05, 0.16]} />
+        <meshStandardMaterial color="#666a66" metalness={0.4} roughness={0.42} />
+      </mesh>
+
+      {/* Door leaf pivots around its hinge instead of rotating from the centre */}
+      <group ref={hinge} position={[-doorWidth / 2, 0, 0]}>
+        <group position={[doorWidth / 2, 0, 0]}>
+          <mesh position={[0, doorHeight / 2, 0]} castShadow receiveShadow>
+            <boxGeometry args={[doorWidth, doorHeight, 0.055]} />
+            <meshPhysicalMaterial
+              color={restricted ? "#81908c" : "#b9ceca"}
+              transparent
+              opacity={restricted ? 0.52 : 0.38}
+              roughness={0.14}
+              metalness={0.04}
+              transmission={0.08}
+              thickness={0.035}
+              clearcoat={0.25}
+              clearcoatRoughness={0.18}
+            />
+          </mesh>
+
+          {/* Slim aluminium rails */}
+          {[-doorWidth / 2 + 0.035, doorWidth / 2 - 0.035].map((x) => (
+            <mesh key={x} position={[x, doorHeight / 2, 0.035]} castShadow>
+              <boxGeometry args={[0.045, doorHeight, 0.04]} />
+              <meshStandardMaterial color="#343836" metalness={0.62} roughness={0.28} />
+            </mesh>
+          ))}
+          <mesh position={[0, 0.08, 0.035]} castShadow>
+            <boxGeometry args={[doorWidth, 0.07, 0.04]} />
+            <meshStandardMaterial color="#343836" metalness={0.62} roughness={0.28} />
+          </mesh>
+          <mesh position={[0, doorHeight - 0.08, 0.035]} castShadow>
+            <boxGeometry args={[doorWidth, 0.07, 0.04]} />
+            <meshStandardMaterial color="#343836" metalness={0.62} roughness={0.28} />
+          </mesh>
+
+          {/* Real pull handle */}
+          <mesh position={[0.31, 1.08, 0.105]} castShadow>
+            <boxGeometry args={[0.035, 0.42, 0.035]} />
+            <meshStandardMaterial color="#d5d7d2" metalness={0.85} roughness={0.2} />
+          </mesh>
+          <mesh position={[0.31, 0.87, 0.075]} castShadow>
+            <boxGeometry args={[0.11, 0.035, 0.055]} />
+            <meshStandardMaterial color="#d5d7d2" metalness={0.85} roughness={0.2} />
+          </mesh>
+          <mesh position={[0.31, 1.29, 0.075]} castShadow>
+            <boxGeometry args={[0.11, 0.035, 0.055]} />
+            <meshStandardMaterial color="#d5d7d2" metalness={0.85} roughness={0.2} />
+          </mesh>
+
+          {/* Frosted privacy band */}
+          <mesh position={[0, 1.08, 0.035]}>
+            <boxGeometry args={[0.78, 0.34, 0.012]} />
+            <meshPhysicalMaterial
+              color="#dce2df"
+              transparent
+              opacity={0.34}
+              roughness={0.76}
+            />
+          </mesh>
+        </group>
+      </group>
+
+      {/* Access reader lives on the fixed frame */}
+      {restricted && (
+        <group position={[doorWidth / 2 + 0.18, 1.08, 0.08]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.18, 0.28, 0.07]} />
+            <meshStandardMaterial color="#171b17" roughness={0.4} metalness={0.2} />
+          </mesh>
+          <mesh position={[0, 0.045, 0.041]}>
+            <boxGeometry args={[0.105, 0.06, 0.008]} />
+            <meshStandardMaterial
+              color={open ? "#d9ff65" : "#c54b46"}
+              emissive={open ? "#91a72d" : "#6b1e1b"}
+              emissiveIntensity={0.9}
+            />
+          </mesh>
+          <mesh position={[0, -0.055, 0.041]}>
+            <circleGeometry args={[0.034, 18]} />
+            <meshStandardMaterial color="#929892" metalness={0.5} roughness={0.3} />
+          </mesh>
+        </group>
+      )}
     </group>
   );
 }
@@ -676,7 +791,11 @@ function Room({
         }}
       >
         <planeGeometry args={[w, d]} />
-        <meshStandardMaterial color={active ? "#e4efbd" : "#dadbd4"} roughness={1} />
+        <meshStandardMaterial
+          color={active ? "#e5e8d6" : "#d7d5cd"}
+          roughness={0.82}
+          metalness={0.02}
+        />
       </mesh>
 
       <Wall position={[0, WALL_HEIGHT / 2, -d / 2]} size={[w, WALL_HEIGHT, WALL_THICKNESS]} />
@@ -694,17 +813,22 @@ function Room({
       {(isLeft || isRight) && (
         <>
           <Wall
-            position={[innerWallX, WALL_HEIGHT / 2, -1.35]}
-            size={[WALL_THICKNESS, WALL_HEIGHT, 1.3]}
+            position={[innerWallX, WALL_HEIGHT / 2, -1.42]}
+            size={[WALL_THICKNESS, WALL_HEIGHT, 1.46]}
           />
           <Wall
-            position={[innerWallX, WALL_HEIGHT / 2, 1.35]}
-            size={[WALL_THICKNESS, WALL_HEIGHT, 1.3]}
+            position={[innerWallX, WALL_HEIGHT / 2, 1.42]}
+            size={[WALL_THICKNESS, WALL_HEIGHT, 1.46]}
+          />
+          <Wall
+            position={[innerWallX, 2.48, 0.0]}
+            size={[WALL_THICKNESS, 0.34, 1.42]}
           />
           <GlassDoor
             position={[innerWallX + (isLeft ? -0.04 : 0.04), 0, 0.35]}
             rotation={doorRotation}
             open={department.requiresCredentials ? unlocked : active}
+            restricted={Boolean(department.requiresCredentials)}
           />
         </>
       )}
@@ -731,18 +855,6 @@ function Room({
 
       {department.requiresCredentials && !unlocked && (
         <>
-          <mesh
-            position={[
-              innerWallX + (isLeft ? 0.08 : -0.08),
-              1.0,
-              0.35,
-            ]}
-            castShadow
-          >
-            <boxGeometry args={[0.08, 0.62, 0.46]} />
-            <meshStandardMaterial color="#171b17" />
-          </mesh>
-
           <Html
             position={[
               innerWallX + (isLeft ? 0.28 : -0.28),
@@ -1264,14 +1376,16 @@ function World({
 
   return (
     <>
-      <color attach="background" args={["#e9ece5"]} />
-      <fog attach="fog" args={["#e9ece5", 22, 42]} />
-      <ambientLight intensity={1.6} />
+      <color attach="background" args={["#e7e6df"]} />
+      <fog attach="fog" args={["#e7e6df", 24, 48]} />
+      <SoftShadows size={18} samples={12} focus={0.45} />
+      <hemisphereLight args={["#f6f2e8", "#73786f", 1.5]} />
+      <ambientLight intensity={0.58} />
       <directionalLight
         position={[8, 14, 8]}
-        intensity={2.4}
+        intensity={3.1}
         castShadow
-        shadow-mapSize={[1024, 1024]}
+        shadow-mapSize={[2048, 2048]}
       />
       <CeilingLights />
 
@@ -1285,7 +1399,7 @@ function World({
         }}
       >
         <planeGeometry args={[19, 22]} />
-        <meshStandardMaterial color="#c9cbc3" roughness={1} />
+        <meshStandardMaterial color="#bfc0b9" roughness={0.88} metalness={0.03} />
       </mesh>
       <primitive object={grid} position={[0, 0.005, -5.25]} />
 
@@ -1299,7 +1413,7 @@ function World({
         }}
       >
         <planeGeometry args={[3.3, 16.3]} />
-        <meshStandardMaterial color="#e9e8e0" roughness={1} />
+        <meshStandardMaterial color="#d9d7cf" roughness={0.7} metalness={0.02} />
       </mesh>
 
       <mesh
@@ -1322,8 +1436,8 @@ function World({
         ENTRE NO ESCRITÓRIO
       </Text>
 
-      <Wall position={[-9.05, 0.8, -5.15]} size={[0.12, 1.6, 21.5]} color="#bfc2ba" />
-      <Wall position={[9.05, 0.8, -5.15]} size={[0.12, 1.6, 21.5]} color="#bfc2ba" />
+      <Wall position={[-9.05, 0.8, -5.15]} size={[0.12, 1.6, 21.5]} color="#d7d5ce" />
+      <Wall position={[9.05, 0.8, -5.15]} size={[0.12, 1.6, 21.5]} color="#d7d5ce" />
 
       <group position={[0, 0, 0.56]}>
         <mesh position={[-1.2, 0.55, 0]} castShadow>
@@ -1375,6 +1489,27 @@ function World({
           onApproach={approachDepartment}
         />
       ))}
+
+      {/* Corridor tile joints give the floor architectural scale */}
+      {[-13.2, -11.2, -9.2, -7.2, -5.2, -3.2, -1.2].map((z) => (
+        <mesh
+          key={z}
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, 0.023, z]}
+        >
+          <planeGeometry args={[3.15, 0.012]} />
+          <meshBasicMaterial color="#acaea8" transparent opacity={0.42} />
+        </mesh>
+      ))}
+
+      <ContactShadows
+        position={[0, 0.03, -5.5]}
+        opacity={0.34}
+        scale={19}
+        blur={2.7}
+        far={8}
+        frames={1}
+      />
 
       {moveRequest && (
         <mesh
