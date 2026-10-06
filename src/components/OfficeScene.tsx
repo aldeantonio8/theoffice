@@ -32,9 +32,12 @@ const WALL_THICKNESS = 0.13;
 
 const NPC_DEPARTMENT_IDS = new Set<Department["id"]>([
   "reception",
+  "hr",
+  "procurement",
   "operations",
   "director",
   "projects",
+  "meeting",
 ]);
 
 const ROOM_PLATES: Record<Department["id"], string> = {
@@ -582,9 +585,11 @@ function NPC({
   const variante =
     department.id === "reception"
       ? "mina"
-      : department.id === "operations" || department.id === "director"
-        ? "team01"
-        : "team02";
+      : department.id === "hr" ||
+          department.id === "projects" ||
+          department.id === "meeting"
+        ? "team02"
+        : "team01";
 
   useFrame(({ clock }) => {
     if (!ref.current) return;
@@ -614,12 +619,14 @@ function NPC({
         </mesh>
       )}
 
-      <Html position={[0, 2.08, 0]} center>
-        <div className={`npc-tag ${active ? "npc-tag--active" : ""}`}>
-          <strong>{department.id === "reception" ? "Mina" : department.npcName}</strong>
-          <span>{department.npcRole}</span>
-        </div>
-      </Html>
+      {(active || hovered) && (
+        <Html position={[0, 2.08, 0]} center>
+          <div className={`npc-tag ${active ? "npc-tag--active" : ""}`}>
+            <strong>{department.id === "reception" ? "Mina" : department.npcName}</strong>
+            <span>{department.npcRole}</span>
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
@@ -985,14 +992,51 @@ function Room({
   );
 }
 
-function FixedIsometricCamera() {
+function FixedIsometricCamera({
+  focusDepartment,
+}: {
+  focusDepartment: Department | null;
+}) {
   const { camera } = useThree();
+  const lookTarget = useRef(new THREE.Vector3(0, 0.2, -5.3));
 
   useEffect(() => {
+    const ortho = camera as THREE.OrthographicCamera;
     camera.position.set(12.5, 13.5, 16.5);
-    camera.lookAt(0, 0.2, -5.3);
-    camera.updateProjectionMatrix();
+    lookTarget.current.set(0, 0.2, -5.3);
+    camera.lookAt(lookTarget.current);
+    ortho.zoom = 43;
+    ortho.updateProjectionMatrix();
   }, [camera]);
+
+  useFrame((_, delta) => {
+    const ortho = camera as THREE.OrthographicCamera;
+    const smooth = 1 - Math.exp(-5.5 * delta);
+
+    if (focusDepartment) {
+      const [x, , z] = focusDepartment.npcPosition;
+      const focus = new THREE.Vector3(x, 1.0, z);
+      const cameraTarget = new THREE.Vector3(
+        x + 4.4,
+        5.7,
+        z + 5.0,
+      );
+
+      camera.position.lerp(cameraTarget, smooth);
+      lookTarget.current.lerp(focus, smooth);
+      ortho.zoom = THREE.MathUtils.lerp(ortho.zoom, 82, smooth);
+    } else {
+      const cameraTarget = new THREE.Vector3(12.5, 13.5, 16.5);
+      const overviewTarget = new THREE.Vector3(0, 0.2, -5.3);
+
+      camera.position.lerp(cameraTarget, smooth);
+      lookTarget.current.lerp(overviewTarget, smooth);
+      ortho.zoom = THREE.MathUtils.lerp(ortho.zoom, 43, smooth);
+    }
+
+    camera.lookAt(lookTarget.current);
+    ortho.updateProjectionMatrix();
+  });
 
   return null;
 }
@@ -1391,7 +1435,7 @@ function World({
 
   return (
     <>
-      <FixedIsometricCamera />
+      <FixedIsometricCamera focusDepartment={selected} />
       <color attach="background" args={["#efebe4"]} />
       <fog attach="fog" args={["#efebe4", 28, 55]} />
       <hemisphereLight args={["#fffaf2", "#8c8a83", 1.45]} />
@@ -1499,7 +1543,10 @@ function World({
         <NPC
           key={department.id}
           department={department}
-          active={nearby?.id === department.id}
+          active={
+            selected?.id === department.id ||
+            nearby?.id === department.id
+          }
           onApproach={approachDepartment}
         />
       ))}
