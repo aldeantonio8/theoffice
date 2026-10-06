@@ -666,7 +666,7 @@ function Player({
         <meshStandardMaterial color="#252824" />
       </mesh>
       <Html position={[0, 2.06, 0]} center distanceFactor={11}>
-        <div className="player-label">YOU</div>
+        <div className="player-label">VOCÊ</div>
       </Html>
     </group>
   );
@@ -734,7 +734,7 @@ function World({
         fontSize={0.24}
         color="#171b17"
       >
-        ENTER THE OFFICE
+        ENTRE NO ESCRITÓRIO
       </Text>
 
       <Wall position={[-9.05, 0.8, -5.15]} size={[0.12, 1.6, 21.5]} color="#bfc2ba" />
