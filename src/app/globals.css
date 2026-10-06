@@ -1185,3 +1185,136 @@ button {
     padding: 18px;
   }
 }
+
+.visitor-checkin {
+  width: min(620px, 100%);
+  margin: 24px 0 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid rgba(255,255,255,.18);
+  border-left: 1px solid rgba(255,255,255,.18);
+}
+
+.visitor-checkin-head {
+  grid-column: 1 / -1;
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-right: 1px solid rgba(255,255,255,.18);
+  border-bottom: 1px solid rgba(255,255,255,.18);
+}
+
+.visitor-checkin-head span {
+  font-size: 8px;
+  letter-spacing: .11em;
+  opacity: .55;
+}
+
+.visitor-checkin-head strong {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.visitor-checkin label {
+  min-height: 76px;
+  padding: 11px 13px;
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  border-right: 1px solid rgba(255,255,255,.18);
+  border-bottom: 1px solid rgba(255,255,255,.18);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  color: rgba(255,255,255,.58);
+}
+
+.visitor-checkin input,
+.visitor-checkin select {
+  width: 100%;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid rgba(255,255,255,.14);
+  outline: 0;
+  background: transparent;
+  color: white;
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.visitor-checkin select option {
+  color: #171b17;
+}
+
+.visitor-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 11px 13px;
+  border-right: 1px solid rgba(255,255,255,.18);
+  border-bottom: 1px solid rgba(255,255,255,.18);
+  font-size: 10px;
+  line-height: 1.45;
+  color: rgba(255,255,255,.48);
+}
+
+.checkin-button {
+  grid-column: 1 / -1;
+  padding: 13px 14px;
+  display: flex;
+  justify-content: space-between;
+  border: 0;
+  border-right: 1px solid rgba(255,255,255,.18);
+  border-bottom: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: white;
+  cursor: pointer;
+}
+
+.checkin-button:hover {
+  background: rgba(255,255,255,.1);
+}
+
+.visitor-approved {
+  width: min(620px, 100%);
+  margin: 24px 0 18px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid rgba(217,255,101,.45);
+  background: rgba(217,255,101,.08);
+}
+
+.visitor-approved span {
+  font-size: 8px;
+  letter-spacing: .11em;
+  opacity: .6;
+}
+
+.visitor-approved strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.enter-button:disabled {
+  cursor: not-allowed;
+  opacity: .42;
+}
+
+@media (max-width: 720px) {
+  .visitor-checkin {
+    grid-template-columns: 1fr;
+  }
+
+  .visitor-checkin-head,
+  .visitor-note,
+  .checkin-button {
+    grid-column: 1;
+  }
+
+  .visitor-approved {
+    display: grid;
+  }
+}
