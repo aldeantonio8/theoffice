@@ -1473,3 +1473,133 @@ button {
     padding: 20px;
   }
 }
+
+.reception-gate-label {
+  padding: 6px 9px;
+  background: #171b17;
+  color: white;
+  border: 1px solid rgba(255,255,255,.18);
+  font-size: 7px;
+  letter-spacing: .09em;
+  white-space: nowrap;
+}
+
+.mia-chat {
+  position: absolute;
+  z-index: 30;
+  right: 24px;
+  bottom: 24px;
+  width: min(420px, calc(100vw - 48px));
+  background: rgba(244,246,240,.96);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 28px 90px rgba(23,27,23,.16);
+}
+
+.mia-chat-head {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+
+.mia-chat-head > div {
+  display: grid;
+  gap: 2px;
+}
+
+.mia-chat-head strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mia-chat-head span {
+  font-size: 9px;
+  opacity: .55;
+}
+
+.mia-chat-head button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.mia-chat-body {
+  max-height: 340px;
+  overflow: auto;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.chat-message {
+  max-width: 84%;
+  display: grid;
+  gap: 4px;
+}
+
+.chat-message span {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  opacity: .5;
+}
+
+.chat-message p {
+  margin: 0;
+  padding: 11px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.chat-message--mia p {
+  background: #e3e6de;
+}
+
+.chat-message--visitor {
+  justify-self: end;
+}
+
+.chat-message--visitor span {
+  text-align: right;
+}
+
+.chat-message--visitor p {
+  background: #171b17;
+  color: white;
+}
+
+.mia-chat-actions {
+  padding: 0 16px 16px;
+  display: grid;
+  gap: 7px;
+}
+
+.mia-chat-actions button {
+  padding: 12px 13px;
+  display: flex;
+  justify-content: space-between;
+  border: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mia-chat-actions button:hover,
+.mia-chat-actions .mia-chat-continue {
+  background: var(--acid);
+  border-color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .mia-chat {
+    left: 12px;
+    right: 12px;
+    bottom: 92px;
+    width: auto;
+  }
+}
