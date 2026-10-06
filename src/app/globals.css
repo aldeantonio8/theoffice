@@ -1003,3 +1003,66 @@ button {
 .mini-corridor {
   height: 96%;
 }
+
+.project-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  margin-top: 28px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.project-card {
+  min-height: 230px;
+  padding: 18px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 22px;
+  background: #f1f2ed;
+}
+
+.project-card > span {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  opacity: 0.45;
+}
+
+.project-card small {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+}
+
+.project-card h3 {
+  margin: 0 0 10px;
+  font-size: 24px;
+  line-height: 0.95;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+.project-card p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  opacity: 0.64;
+}
+
+.project-card button {
+  padding: 10px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .project-grid {
+    grid-template-columns: 1fr;
+  }
+}
