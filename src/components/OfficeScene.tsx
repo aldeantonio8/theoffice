@@ -62,7 +62,7 @@ function isWalkable(
     depth: number,
   ) => Math.abs(px - cx) <= width / 2 && Math.abs(pz - cz) <= depth / 2;
 
-  // Até concluir a conversa com a Mia, a receção é a única zona navegável.
+  // Até concluir a conversa com a Mina, a receção é a única zona navegável.
   if (!receptionCleared && z < 0.58) return false;
 
   // Main circulation spine and entrance.
@@ -612,7 +612,7 @@ function NPC({
         </mesh>
       )}
 
-      <Html position={[0, 2.08, 0]} center distanceFactor={11}>
+      <Html position={[0, 2.08, 0]} center>
         <div className={`npc-tag ${active ? "npc-tag--active" : ""}`}>
           <strong>{department.npcName}</strong>
           <span>{department.npcRole}</span>
@@ -861,7 +861,6 @@ function Room({
               0.35,
             ]}
             center
-            distanceFactor={accessActive ? 7 : 10}
           >
             {accessActive ? (
               accessGranted ? (
@@ -1289,7 +1288,7 @@ function Player({
   return (
     <group ref={ref} position={[0, 0, 4.35]}>
       <HumanAvatar variante="masculino" estado={moving ? "andar" : "parado"} />
-      <Html position={[0, 2.08, 0]} center distanceFactor={11}>
+      <Html position={[0, 2.08, 0]} center>
         <div className="player-label">VOCÊ</div>
       </Html>
     </group>
@@ -1370,7 +1369,7 @@ function World({
       department.requiresCredentials &&
       !unlockedDepartments.has(department.id)
     ) {
-      onRestrictedAttempt(department);
+      requestMove(getDoorApproachPoint(department));
       return;
     }
 
@@ -1453,8 +1452,8 @@ function World({
               <boxGeometry args={[2.35, 0.08, 0.08]} />
               <meshStandardMaterial color="#171b17" />
             </mesh>
-            <Html position={[0, 1.25, 0]} center distanceFactor={9}>
-              <div className="reception-gate-label">FALE COM A MIA PARA CONTINUAR</div>
+            <Html position={[0, 1.25, 0]} center>
+              <div className="reception-gate-label">FALE COM A MINA PARA CONTINUAR</div>
             </Html>
           </>
         )}
