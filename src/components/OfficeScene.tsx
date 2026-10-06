@@ -522,10 +522,10 @@ function Player({
   const nearbyRef = useRef<Department | null>(null);
   const lastNearbyId = useRef<string | null>(null);
   const lastAreaId = useRef<string | null>(null);
+  const lastMoving = useRef(false);
   const { camera } = useThree();
-  const walkTime = useRef(0);
   const lookTarget = useRef(new THREE.Vector3(0, 0.5, 0));
-  const movingRef = useRef(false);
+  const [moving, setMoving] = useState(false);
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
@@ -533,15 +533,120 @@ function Player({
       keys.current[key] = true;
       if (key === "e" && nearbyRef.current) onInteract(nearbyRef.current);
     };
+
     const up = (event: KeyboardEvent) => {
       keys.current[event.key.toLowerCase()] = false;
     };
 
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    return (
+
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, [onInteract]);
+
+  useFrame((_, delta) => {
+    if (!ref.current) return;
+
+    const speed = 3.65 * delta;
+    const p = ref.current.position;
+
+    const dx =
+      (keys.current.d || keys.current.arrowright ? 1 : 0) -
+      (keys.current.a || keys.current.arrowleft ? 1 : 0);
+
+    const dz =
+      (keys.current.s || keys.current.arrowdown ? 1 : 0) -
+      (keys.current.w || keys.current.arrowup ? 1 : 0);
+
+    const isMoving = !focusDepartment && Boolean(dx || dz);
+
+    if (isMoving !== lastMoving.current) {
+      lastMoving.current = isMoving;
+      setMoving(isMoving);
+    }
+
+    if (isMoving) {
+      const magnitude = Math.hypot(dx, dz) || 1;
+      const nextX = p.x + (dx / magnitude) * speed;
+      const nextZ = p.z + (dz / magnitude) * speed;
+
+      if (isWalkable(nextX, p.z)) p.x = nextX;
+      if (isWalkable(p.x, nextZ)) p.z = nextZ;
+
+      ref.current.rotation.y = Math.atan2(dx, dz);
+    }
+
+    p.x = THREE.MathUtils.clamp(p.x, -8.35, 8.35);
+    p.z = THREE.MathUtils.clamp(p.z, -15.2, 5.15);
+
+    let nearest: Department | null = null;
+    let nearestDistance = 1.72;
+
+    for (const department of departments) {
+      const [nx, , nz] = department.npcPosition;
+      const distance = Math.hypot(p.x - nx, p.z - nz);
+
+      if (distance < nearestDistance) {
+        nearest = department;
+        nearestDistance = distance;
+      }
+    }
+
+    nearbyRef.current = nearest;
+    const nextId = nearest?.id ?? null;
+
+    if (nextId !== lastNearbyId.current) {
+      lastNearbyId.current = nextId;
+      onNearby(nearest);
+    }
+
+    let area: Department | null = null;
+
+    for (const department of departments) {
+      const [cx, , cz] = department.position;
+      const [width, , depth] = department.size;
+
+      if (
+        Math.abs(p.x - cx) <= width / 2 - 0.15 &&
+        Math.abs(p.z - cz) <= depth / 2 - 0.15
+      ) {
+        area = department;
+        break;
+      }
+    }
+
+    const areaId = area?.id ?? null;
+
+    if (areaId !== lastAreaId.current) {
+      lastAreaId.current = areaId;
+      onAreaChange(area);
+    }
+
+    if (focusDepartment) {
+      const [nx, , nz] = focusDepartment.npcPosition;
+      const side = nx < 0 ? 1 : -1;
+      const cameraTarget = new THREE.Vector3(nx + side * 2.1, 2.7, nz + 3.1);
+      const target = new THREE.Vector3(nx, 1.25, nz);
+
+      camera.position.lerp(cameraTarget, 0.075);
+      lookTarget.current.lerp(target, 0.1);
+      camera.lookAt(lookTarget.current);
+    } else {
+      const cameraTarget = new THREE.Vector3(p.x + 5.4, 6.7, p.z + 7.2);
+      const target = new THREE.Vector3(p.x, 0.38, p.z - 2);
+
+      camera.position.lerp(cameraTarget, 0.06);
+      lookTarget.current.lerp(target, 0.12);
+      camera.lookAt(lookTarget.current);
+    }
+  });
+
+  return (
     <group ref={ref} position={[0, 0, 4.35]}>
-      <HumanAvatar variante="masculino" estado={movingRef.current ? "andar" : "parado"} />
+      <HumanAvatar variante="masculino" estado={moving ? "andar" : "parado"} />
       <Html position={[0, 2.08, 0]} center distanceFactor={11}>
         <div className="player-label">VOCÊ</div>
       </Html>
