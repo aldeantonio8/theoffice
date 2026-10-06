@@ -2,30 +2,116 @@
 
 import { FormEvent, useState } from "react";
 import OfficeScene from "./OfficeScene";
-import { Department } from "./officeData";
+import { Department, departments } from "./officeData";
+
+type Panel =
+  | null
+  | "cv"
+  | "culture"
+  | "procurement"
+  | "supplier"
+  | "services"
+  | "routes"
+  | "story"
+  | "vision"
+  | "tour"
+  | "help";
 
 function dispatchMove(key: string, pressed: boolean) {
   window.dispatchEvent(new KeyboardEvent(pressed ? "keydown" : "keyup", { key }));
 }
 
+const panelCopy: Record<
+  Exclude<Panel, null | "cv" | "procurement" | "supplier">,
+  { eyebrow: string; title: string; body: string; items?: string[] }
+> = {
+  culture: {
+    eyebrow: "People & Culture",
+    title: "Life inside The Office.",
+    body: "A good logistics company is built by people who communicate clearly, solve problems quickly and take ownership of every handover.",
+    items: ["Learning & growth", "Safety first", "Team accountability", "Customer focus"],
+  },
+  services: {
+    eyebrow: "Operations",
+    title: "Moving cargo from A to B is only the beginning.",
+    body: "The Operations room represents the services that keep cargo visible, controlled and moving.",
+    items: ["Road freight", "Sea freight", "Air freight", "Customs clearance", "Warehousing", "Last-mile delivery"],
+  },
+  routes: {
+    eyebrow: "Operations",
+    title: "One room. Many routes.",
+    body: "This prototype uses a control-room metaphor. In a production version, the wall screens can become an interactive map with real offices, corridors and project routes.",
+    items: ["Maputo", "Nacala", "Beira", "Johannesburg", "Regional corridors"],
+  },
+  story: {
+    eyebrow: "Director's Office",
+    title: "Built around movement and trust.",
+    body: "The Office is a portfolio concept for a logistics business: instead of explaining the company through static pages, visitors meet it as a place, room by room.",
+    items: ["Company story", "Capabilities", "Projects", "Team", "Contact"],
+  },
+  vision: {
+    eyebrow: "Director's Office",
+    title: "Make the website feel like the company.",
+    body: "The long-term vision is an explorable 3D office where every department becomes a real digital service: careers, procurement, project cases, meetings and logistics operations.",
+    items: ["Immersive", "Useful", "Fast", "Human", "Memorable"],
+  },
+  tour: {
+    eyebrow: "Reception",
+    title: "Choose where to start.",
+    body: "You can walk naturally with WASD, or use this directory to understand what each room represents.",
+    items: departments.map((department) => `${department.label} — ${department.eyebrow}`),
+  },
+  help: {
+    eyebrow: "Reception",
+    title: "How The Office works.",
+    body: "Walk close to a team member. When the prompt appears, press E or click the person. Every conversation replaces a traditional website section.",
+    items: ["WASD / arrows to move", "E to talk", "Click a person on desktop", "Directional controls on mobile"],
+  },
+};
+
 export default function OfficeExperience() {
   const [entered, setEntered] = useState(false);
   const [selected, setSelected] = useState<Department | null>(null);
   const [nearby, setNearby] = useState<Department | null>(null);
-  const [showCV, setShowCV] = useState(false);
+  const [panel, setPanel] = useState<Panel>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleAction = (action: string) => {
-    if (action === "Submit CV") {
-      setSubmitted(false);
-      setShowCV(true);
-    }
+  const openPanel = (next: Panel) => {
+    setSubmitted(false);
+    setPanel(next);
   };
 
-  const submitCV = (event: FormEvent<HTMLFormElement>) => {
+  const handleAction = (action: string) => {
+    const actions: Record<string, Panel> = {
+      "Submit CV": "cv",
+      "Life at the company": "culture",
+      "Request a product": "procurement",
+      "Become a supplier": "supplier",
+      "Explore services": "services",
+      "View routes": "routes",
+      "Our story": "story",
+      "Our vision": "vision",
+      "Start tour": "tour",
+      "How does this work?": "help",
+    };
+
+    openPanel(actions[action] ?? null);
+  };
+
+  const submitDemo = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitted(true);
   };
+
+  const closePanel = () => {
+    setPanel(null);
+    setSubmitted(false);
+  };
+
+  const infoPanel =
+    panel && panel !== "cv" && panel !== "procurement" && panel !== "supplier"
+      ? panelCopy[panel]
+      : null;
 
   return (
     <main className="experience-shell">
@@ -118,70 +204,174 @@ export default function OfficeExperience() {
         )}
       </section>
 
-      {showCV && (
-        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Submit CV">
+      {panel && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
           <div className="form-panel">
-            <div className="form-panel-head">
-              <div>
-                <span className="eyebrow">Human Resources</span>
-                <h2>Leave your CV with us.</h2>
-              </div>
-              <button type="button" aria-label="Close form" onClick={() => setShowCV(false)}>
-                ×
-              </button>
-            </div>
-
-            {submitted ? (
-              <div className="form-success">
-                <span>APPLICATION RECEIVED</span>
-                <h3>Thank you.</h3>
-                <p>
-                  The front-end flow is working. In the next phase we can connect this form to Supabase
-                  Storage and Database so the CV is actually saved.
-                </p>
-                <button type="button" onClick={() => setShowCV(false)}>
-                  Back to the office
-                </button>
-              </div>
+            {infoPanel ? (
+              <>
+                <div className="form-panel-head">
+                  <div>
+                    <span className="eyebrow">{infoPanel.eyebrow}</span>
+                    <h2>{infoPanel.title}</h2>
+                  </div>
+                  <button type="button" aria-label="Close panel" onClick={closePanel}>
+                    ×
+                  </button>
+                </div>
+                <div className="info-panel-body">
+                  <p>{infoPanel.body}</p>
+                  {infoPanel.items && (
+                    <div className="info-grid">
+                      {infoPanel.items.map((item, index) => (
+                        <div key={item} className="info-row">
+                          <span>{String(index + 1).padStart(2, "0")}</span>
+                          <strong>{item}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <button className="panel-back" type="button" onClick={closePanel}>
+                    Back to the office <span>→</span>
+                  </button>
+                </div>
+              </>
             ) : (
-              <form className="cv-form" onSubmit={submitCV}>
-                <label>
-                  Full name
-                  <input name="name" type="text" placeholder="Your name" required />
-                </label>
-                <label>
-                  Email
-                  <input name="email" type="email" placeholder="you@email.com" required />
-                </label>
-                <label>
-                  Phone
-                  <input name="phone" type="tel" placeholder="+258" />
-                </label>
-                <label>
-                  Area of interest
-                  <select name="area" defaultValue="">
-                    <option value="" disabled>
-                      Select an area
-                    </option>
-                    <option>Operations</option>
-                    <option>Procurement</option>
-                    <option>Commercial</option>
-                    <option>Technology</option>
-                    <option>Administration</option>
-                  </select>
-                </label>
-                <label className="form-full">
-                  CV
-                  <input name="cv" type="file" accept=".pdf,.doc,.docx" required />
-                </label>
-                <label className="form-full">
-                  Message
-                  <textarea name="message" rows={4} placeholder="Tell us a little about yourself." />
-                </label>
-                <button className="submit-button form-full" type="submit">
-                  Submit application <span>→</span>
-                </button>
-              </form>
+              <>
+                <div className="form-panel-head">
+                  <div>
+                    <span className="eyebrow">
+                      {panel === "cv"
+                        ? "Human Resources"
+                        : panel === "supplier"
+                          ? "Procurement · Suppliers"
+                          : "Procurement · Request"}
+                    </span>
+                    <h2>
+                      {panel === "cv"
+                        ? "Leave your CV with us."
+                        : panel === "supplier"
+                          ? "Become a supplier."
+                          : "Tell us what you need."}
+                    </h2>
+                  </div>
+                  <button type="button" aria-label="Close form" onClick={closePanel}>
+                    ×
+                  </button>
+                </div>
+
+                {submitted ? (
+                  <div className="form-success">
+                    <span>REQUEST RECEIVED</span>
+                    <h3>Thank you.</h3>
+                    <p>
+                      The interaction is complete on the front end. The next backend step is to store
+                      submissions and uploaded files in Supabase.
+                    </p>
+                    <button type="button" onClick={closePanel}>
+                      Back to the office
+                    </button>
+                  </div>
+                ) : panel === "cv" ? (
+                  <form className="cv-form" onSubmit={submitDemo}>
+                    <label>
+                      Full name
+                      <input name="name" type="text" placeholder="Your name" required />
+                    </label>
+                    <label>
+                      Email
+                      <input name="email" type="email" placeholder="you@email.com" required />
+                    </label>
+                    <label>
+                      Phone
+                      <input name="phone" type="tel" placeholder="+258" />
+                    </label>
+                    <label>
+                      Area of interest
+                      <select name="area" defaultValue="">
+                        <option value="" disabled>
+                          Select an area
+                        </option>
+                        <option>Operations</option>
+                        <option>Procurement</option>
+                        <option>Commercial</option>
+                        <option>Technology</option>
+                        <option>Administration</option>
+                      </select>
+                    </label>
+                    <label className="form-full">
+                      CV
+                      <input name="cv" type="file" accept=".pdf,.doc,.docx" required />
+                    </label>
+                    <label className="form-full">
+                      Message
+                      <textarea name="message" rows={4} placeholder="Tell us a little about yourself." />
+                    </label>
+                    <button className="submit-button form-full" type="submit">
+                      Submit application <span>→</span>
+                    </button>
+                  </form>
+                ) : panel === "supplier" ? (
+                  <form className="cv-form" onSubmit={submitDemo}>
+                    <label>
+                      Company name
+                      <input name="company" type="text" placeholder="Company" required />
+                    </label>
+                    <label>
+                      Contact person
+                      <input name="contact" type="text" placeholder="Full name" required />
+                    </label>
+                    <label>
+                      Business email
+                      <input name="email" type="email" placeholder="you@company.com" required />
+                    </label>
+                    <label>
+                      Category
+                      <input name="category" type="text" placeholder="What do you supply?" required />
+                    </label>
+                    <label className="form-full">
+                      Company profile
+                      <input name="profile" type="file" accept=".pdf,.doc,.docx" />
+                    </label>
+                    <label className="form-full">
+                      Message
+                      <textarea name="message" rows={4} placeholder="Introduce your company." />
+                    </label>
+                    <button className="submit-button form-full" type="submit">
+                      Submit supplier profile <span>→</span>
+                    </button>
+                  </form>
+                ) : (
+                  <form className="cv-form" onSubmit={submitDemo}>
+                    <label>
+                      Product / material
+                      <input name="product" type="text" placeholder="What do you need?" required />
+                    </label>
+                    <label>
+                      Quantity
+                      <input name="quantity" type="text" placeholder="e.g. 50 units" required />
+                    </label>
+                    <label>
+                      Delivery location
+                      <input name="location" type="text" placeholder="City / country" required />
+                    </label>
+                    <label>
+                      Needed by
+                      <input name="date" type="date" />
+                    </label>
+                    <label className="form-full">
+                      Reference file
+                      <input name="reference" type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" />
+                    </label>
+                    <label className="form-full">
+                      Specifications
+                      <textarea name="details" rows={4} placeholder="Describe the item or requirements." />
+                    </label>
+                    <button className="submit-button form-full" type="submit">
+                      Send request <span>→</span>
+                    </button>
+                  </form>
+                )}
+              </>
             )}
           </div>
         </div>
