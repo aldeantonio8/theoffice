@@ -436,10 +436,14 @@ function Room({
   department,
   active,
   onSelect,
+  unlocked,
+  onRestrictedAttempt,
 }: {
   department: Department;
   active: boolean;
   onSelect: (department: Department) => void;
+  unlocked: boolean;
+  onRestrictedAttempt: (department: Department) => void;
 }) {
   const [x, , z] = department.position;
   const [w, , d] = department.size;
