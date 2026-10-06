@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "The Office — Interactive 3D Portfolio",
-  description: "Step inside an interactive virtual office and explore the company through its departments.",
+  title: "The Office — Portfólio 3D Interativo",
+  description: "Entre num escritório virtual interativo e descubra a empresa através dos seus departamentos.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="pt">
       <body>{children}</body>
     </html>
   );
