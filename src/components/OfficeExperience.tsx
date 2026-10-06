@@ -164,7 +164,7 @@ export default function OfficeExperience() {
   const [accessGrantedDepartment, setAccessGrantedDepartment] =
     useState<Department["id"] | null>(null);
   const [receptionCleared, setReceptionCleared] = useState(false);
-  const [miaStep, setMiaStep] = useState<0 | 1 | 2>(0);
+  const [minaStep, setMinaStep] = useState<0 | 1 | 2>(0);
 
   const requestRestrictedAccess = (department: Department) => {
     setAccessError("");
@@ -184,7 +184,7 @@ export default function OfficeExperience() {
     }
 
     setSelected(department);
-    if (department.id === "reception") setMiaStep(0);
+    if (department.id === "reception") setMinaStep(0);
     setVisited((current) =>
       current.includes(department.id) ? current : [...current, department.id],
     );
@@ -327,9 +327,9 @@ export default function OfficeExperience() {
         <a className="brand" href="#" aria-label="Página inicial do The Office">
           THE OFFICE
         </a>
-        <div className="topbar-meta">
-          <span>Portfólio interativo</span>
-          <span className="status-dot">Escritório aberto</span>
+        <div className="topbar-meta topbar-meta--minimal">
+          <span className="status-dot">Office open</span>
+          <strong>{visited.length}/{departments.length}</strong>
         </div>
       </header>
 
@@ -353,13 +353,8 @@ export default function OfficeExperience() {
           receptionCleared={receptionCleared}
         />
 
-        <div className="area-indicator">
-          <span>Está em</span>
-          <strong>{currentArea?.label ?? "Corredor principal"}</strong>
-        </div>
-
-        {entered && receptionCleared && (
-          <aside className="mini-map" aria-label="Mini-mapa do escritório">
+        {entered && receptionCleared && directoryOpen && (
+          <aside className="mini-map mini-map--drawer" aria-label="Mini-mapa do escritório">
             <div className="mini-map-head">
               <span>Mapa do escritório</span>
               <strong>{visited.length}/{departments.length}</strong>
@@ -398,42 +393,10 @@ export default function OfficeExperience() {
           type="button"
           onClick={() => setDirectoryOpen((open) => !open)}
         >
-          Diretório
+          Mapa
           <span>{directoryOpen ? "×" : "+"}</span>
         </button>
         )}
-
-        {receptionCleared && directoryOpen && (
-          <nav className="directory-panel" aria-label="Diretório do escritório">
-            <span className="eyebrow">Navegação rápida</span>
-            {departments.map((department, index) => (
-              <button
-                key={department.id}
-                type="button"
-                className={
-                  department.requiresCredentials &&
-                  !unlockedDepartments.includes(department.id)
-                    ? "is-locked"
-                    : ""
-                }
-                onClick={() => {
-                  handleSelect(department);
-                  setDirectoryOpen(false);
-                }}
-              >
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <strong>{department.label}</strong>
-                <em>{department.eyebrow}</em>
-              </button>
-            ))}
-          </nav>
-        )}
-
-        <div className="controls">
-          <span>MOVER</span>
-          <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
-          <span className="controls-separator">Clique no chão para caminhar · clique numa pessoa para falar</span>
-        </div>
 
         <div className="mobile-dpad" aria-label="Controlos de movimento">
           <button
@@ -472,23 +435,10 @@ export default function OfficeExperience() {
           </div>
         </div>
 
-        {entered && (
-          <div className="objective-card">
-            <span>Objetivo atual</span>
-            <strong>
-              {!receptionCleared
-                ? "Fale com a Mia na Receção"
-                : visited.length < departments.length
-                  ? `Explore o escritório · ${visited.length}/${departments.length}`
-                  : "Visita ao escritório concluída"}
-            </strong>
-          </div>
-        )}
-
         {nearby && !selected && (
           <button className="talk-prompt" type="button" onClick={() => handleSelect(nearby)}>
             <span className="talk-key">E</span>
-            Falar com {nearby.npcName}
+            Talk to {nearby.npcName}
           </button>
         )}
 
@@ -496,7 +446,7 @@ export default function OfficeExperience() {
           <aside className="mia-chat">
             <div className="mia-chat-head">
               <div>
-                <strong>Mia</strong>
+                <strong>Mina</strong>
                 <span>Receção</span>
               </div>
               <button type="button" onClick={() => setSelected(null)} aria-label="Fechar conversa">
@@ -506,25 +456,25 @@ export default function OfficeExperience() {
 
             <div className="mia-chat-body">
               <div className="chat-message chat-message--mia">
-                <span>Mia</span>
+                <span>Mina</span>
                 <p>Olá 👋 Bem-vindo ao The Office.</p>
               </div>
 
-              {miaStep >= 1 && (
+              {minaStep >= 1 && (
                 <div className="chat-message chat-message--mia">
-                  <span>Mia</span>
+                  <span>Mina</span>
                   <p>Antes de continuar, diga-me: o que o trouxe até aqui hoje?</p>
                 </div>
               )}
 
-              {miaStep === 2 && (
+              {minaStep === 2 && (
                 <>
                   <div className="chat-message chat-message--visitor">
                     <span>Você</span>
                     <p>Quero conhecer melhor a empresa e explorar o escritório.</p>
                   </div>
                   <div className="chat-message chat-message--mia">
-                    <span>Mia</span>
+                    <span>Mina</span>
                     <p>Perfeito. Pode avançar. Algumas áreas são restritas e podem pedir credenciais.</p>
                   </div>
                 </>
@@ -532,27 +482,27 @@ export default function OfficeExperience() {
             </div>
 
             <div className="mia-chat-actions">
-              {miaStep === 0 && (
-                <button type="button" onClick={() => setMiaStep(1)}>
-                  Olá, Mia. <span>→</span>
+              {minaStep === 0 && (
+                <button type="button" onClick={() => setMinaStep(1)}>
+                  Olá, Mina. <span>→</span>
                 </button>
               )}
 
-              {miaStep === 1 && (
+              {minaStep === 1 && (
                 <>
-                  <button type="button" onClick={() => setMiaStep(2)}>
+                  <button type="button" onClick={() => setMinaStep(2)}>
                     Quero conhecer a empresa <span>→</span>
                   </button>
-                  <button type="button" onClick={() => setMiaStep(2)}>
+                  <button type="button" onClick={() => setMinaStep(2)}>
                     Vim conhecer os serviços <span>→</span>
                   </button>
-                  <button type="button" onClick={() => setMiaStep(2)}>
+                  <button type="button" onClick={() => setMinaStep(2)}>
                     Estou à procura de oportunidades <span>→</span>
                   </button>
                 </>
               )}
 
-              {miaStep === 2 && (
+              {minaStep === 2 && (
                 <button
                   className="mia-chat-continue"
                   type="button"
@@ -861,8 +811,7 @@ export default function OfficeExperience() {
 
             <div className="intro-controls">
               <span>Clique no chão para caminhar</span>
-              <span>WASD também funciona</span>
-              <span>ESC para fechar</span>
+              <span>As ações aparecem quando se aproxima</span>
             </div>
           </div>
           <div className="intro-footer">
