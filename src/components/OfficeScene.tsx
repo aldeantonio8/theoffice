@@ -27,7 +27,7 @@ type Props = {
   receptionCleared: boolean;
 };
 
-const WALL_HEIGHT = 1.38;
+const WALL_HEIGHT = 1.45;
 const WALL_THICKNESS = 0.13;
 
 const NPC_DEPARTMENT_IDS = new Set<Department["id"]>([
@@ -290,7 +290,7 @@ function getDoorApproachPoint(department: Department) {
 function Wall({
   position,
   size,
-  color = "#ecebe4",
+  color = "#f1eee8",
 }: {
   position: [number, number, number];
   size: [number, number, number];
@@ -315,15 +315,15 @@ function Chair({
     <group position={position} rotation={[0, rotation, 0]}>
       <mesh position={[0, 0.35, 0]} castShadow>
         <boxGeometry args={[0.58, 0.12, 0.58]} />
-        <meshStandardMaterial color="#252824" roughness={0.82} />
+        <meshStandardMaterial color="#d8d1c7" roughness={0.82} />
       </mesh>
       <mesh position={[0, 0.72, 0.26]} rotation={[-0.08, 0, 0]} castShadow>
         <boxGeometry args={[0.58, 0.72, 0.1]} />
-        <meshStandardMaterial color="#30332e" roughness={0.82} />
+        <meshStandardMaterial color="#ddd6cc" roughness={0.82} />
       </mesh>
       <mesh position={[0, 0.12, 0]}>
         <cylinderGeometry args={[0.05, 0.05, 0.3, 10]} />
-        <meshStandardMaterial color="#52564f" />
+        <meshStandardMaterial color="#b8b1a7" />
       </mesh>
     </group>
   );
@@ -340,21 +340,21 @@ function Desk({
     <group position={position} rotation={[0, rotation, 0]}>
       <mesh position={[0, 0.45, 0]} castShadow>
         <boxGeometry args={[1.65, 0.1, 0.72]} />
-        <meshStandardMaterial color="#55584f" roughness={0.78} />
+        <meshStandardMaterial color="#cdb892" roughness={0.78} />
       </mesh>
       {[-0.66, 0.66].map((x) => (
         <mesh key={x} position={[x, 0.22, 0]} castShadow>
           <boxGeometry args={[0.08, 0.45, 0.54]} />
-          <meshStandardMaterial color="#4a4d47" />
+          <meshStandardMaterial color="#bfa982" />
         </mesh>
       ))}
       <mesh position={[0, 0.76, -0.09]} castShadow>
         <boxGeometry args={[0.68, 0.42, 0.045]} />
-        <meshStandardMaterial color="#1f221f" emissive="#131512" emissiveIntensity={0.2} />
+        <meshStandardMaterial color="#262827" emissive="#131512" emissiveIntensity={0.2} />
       </mesh>
       <mesh position={[0, 0.56, 0.12]} castShadow>
         <boxGeometry args={[0.56, 0.035, 0.22]} />
-        <meshStandardMaterial color="#2a2d29" />
+        <meshStandardMaterial color="#343735" />
       </mesh>
     </group>
   );
@@ -365,7 +365,7 @@ function Plant({ position }: { position: [number, number, number] }) {
     <group position={position}>
       <mesh position={[0, 0.18, 0]} castShadow>
         <cylinderGeometry args={[0.23, 0.18, 0.36, 12]} />
-        <meshStandardMaterial color="#8b806d" roughness={1} />
+        <meshStandardMaterial color="#b8afa3" roughness={1} />
       </mesh>
       {[0, 1, 2, 3, 4].map((i) => {
         const angle = (i / 5) * Math.PI * 2;
@@ -377,7 +377,7 @@ function Plant({ position }: { position: [number, number, number] }) {
             castShadow
           >
             <capsuleGeometry args={[0.08, 0.42, 4, 8]} />
-            <meshStandardMaterial color="#596c4e" roughness={1} />
+            <meshStandardMaterial color="#49664a" roughness={1} />
           </mesh>
         );
       })}
@@ -391,13 +391,13 @@ function Shelf({ position }: { position: [number, number, number] }) {
       {[0.22, 0.72, 1.22].map((y) => (
         <mesh key={y} position={[0, y, 0]} castShadow>
           <boxGeometry args={[1.45, 0.08, 0.55]} />
-          <meshStandardMaterial color="#686b63" />
+          <meshStandardMaterial color="#c6b18b" />
         </mesh>
       ))}
       {[-0.66, 0.66].map((x) => (
         <mesh key={x} position={[x, 0.72, 0]} castShadow>
           <boxGeometry args={[0.08, 1.42, 0.55]} />
-          <meshStandardMaterial color="#555850" />
+          <meshStandardMaterial color="#b9a47e" />
         </mesh>
       ))}
       {[
@@ -420,16 +420,16 @@ function Sofa({ position }: { position: [number, number, number] }) {
     <group position={position}>
       <mesh position={[0, 0.35, 0]} castShadow>
         <boxGeometry args={[1.7, 0.42, 0.75]} />
-        <meshStandardMaterial color="#73776d" roughness={0.96} />
+        <meshStandardMaterial color="#d7d0c6" roughness={0.96} />
       </mesh>
       <mesh position={[0, 0.72, 0.3]} castShadow>
         <boxGeometry args={[1.7, 0.65, 0.16]} />
-        <meshStandardMaterial color="#777b71" roughness={0.96} />
+        <meshStandardMaterial color="#ddd6cc" roughness={0.96} />
       </mesh>
       {[-0.79, 0.79].map((x) => (
         <mesh key={x} position={[x, 0.48, 0]}>
           <boxGeometry args={[0.14, 0.48, 0.78]} />
-          <meshStandardMaterial color="#666a61" />
+          <meshStandardMaterial color="#c9c1b6" />
         </mesh>
       ))}
     </group>
@@ -468,15 +468,15 @@ function GlassDoor({
       {/* Metal frame fixed to the wall */}
       <mesh position={[-doorWidth / 2 - frame / 2, doorHeight / 2, 0]} castShadow>
         <boxGeometry args={[frame, doorHeight + frame * 2, 0.095]} />
-        <meshStandardMaterial color="#3a3d3a" metalness={0.52} roughness={0.34} />
+        <meshStandardMaterial color="#1e211f" metalness={0.52} roughness={0.34} />
       </mesh>
       <mesh position={[doorWidth / 2 + frame / 2, doorHeight / 2, 0]} castShadow>
         <boxGeometry args={[frame, doorHeight + frame * 2, 0.095]} />
-        <meshStandardMaterial color="#282b29" metalness={0.58} roughness={0.32} />
+        <meshStandardMaterial color="#171918" metalness={0.58} roughness={0.32} />
       </mesh>
       <mesh position={[0, doorHeight + frame / 2, 0]} castShadow>
         <boxGeometry args={[doorWidth + frame * 2, frame, 0.095]} />
-        <meshStandardMaterial color="#282b29" metalness={0.58} roughness={0.32} />
+        <meshStandardMaterial color="#171918" metalness={0.58} roughness={0.32} />
       </mesh>
 
       {/* Threshold */}
@@ -491,7 +491,7 @@ function GlassDoor({
           <mesh position={[0, doorHeight / 2, 0]} castShadow receiveShadow>
             <boxGeometry args={[doorWidth, doorHeight, 0.055]} />
             <meshStandardMaterial
-              color={restricted ? "#8f9d99" : "#b9ceca"}
+              color={restricted ? "#a9b0ad" : "#d5d8d4"}
               transparent
               opacity={restricted ? 0.48 : 0.34}
               roughness={0.26}
@@ -503,16 +503,16 @@ function GlassDoor({
           {[-doorWidth / 2 + 0.035, doorWidth / 2 - 0.035].map((x) => (
             <mesh key={x} position={[x, doorHeight / 2, 0.035]} castShadow>
               <boxGeometry args={[0.045, doorHeight, 0.04]} />
-              <meshStandardMaterial color="#343836" metalness={0.62} roughness={0.28} />
+              <meshStandardMaterial color="#202321" metalness={0.62} roughness={0.28} />
             </mesh>
           ))}
           <mesh position={[0, 0.08, 0.035]} castShadow>
             <boxGeometry args={[doorWidth, 0.07, 0.04]} />
-            <meshStandardMaterial color="#343836" metalness={0.62} roughness={0.28} />
+            <meshStandardMaterial color="#202321" metalness={0.62} roughness={0.28} />
           </mesh>
           <mesh position={[0, doorHeight - 0.08, 0.035]} castShadow>
             <boxGeometry args={[doorWidth, 0.07, 0.04]} />
-            <meshStandardMaterial color="#343836" metalness={0.62} roughness={0.28} />
+            <meshStandardMaterial color="#202321" metalness={0.62} roughness={0.28} />
           </mesh>
 
           {/* Real pull handle */}
@@ -628,8 +628,18 @@ function DepartmentProps({ department }: { department: Department }) {
   if (id === "reception") {
     return (
       <>
-        <Sofa position={[-1.45, 0, 1.05]} />
-        <Plant position={[1.9, 0, 1.05]} />
+        <Sofa position={[-1.55, 0, 1.0]} />
+        <Plant position={[1.95, 0, 1.05]} />
+        <group position={[-0.55, 0, 1.15]}>
+          <mesh position={[0, 0.32, 0]} castShadow>
+            <cylinderGeometry args={[0.5, 0.5, 0.08, 24]} />
+            <meshStandardMaterial color="#ceb78f" roughness={0.78} />
+          </mesh>
+          <mesh position={[0, 0.15, 0]} castShadow>
+            <cylinderGeometry args={[0.055, 0.075, 0.3, 10]} />
+            <meshStandardMaterial color="#a99576" roughness={0.8} />
+          </mesh>
+        </group>
       </>
     );
   }
@@ -702,7 +712,7 @@ function DepartmentProps({ department }: { department: Department }) {
       <>
         <mesh position={[0, 0.5, 0.4]} castShadow>
           <boxGeometry args={[2.7, 0.12, 1.15]} />
-          <meshStandardMaterial color="#5f625b" roughness={0.82} />
+          <meshStandardMaterial color="#cbb48c" roughness={0.82} />
         </mesh>
         {[-1.25, -0.4, 0.4, 1.25].map((x) => (
           <Chair key={x} position={[x, 0, 1.18]} rotation={Math.PI} />
@@ -775,7 +785,7 @@ function Room({
       >
         <planeGeometry args={[w, d]} />
         <meshStandardMaterial
-          color={active ? "#e5e8d6" : "#d7d5cd"}
+          color={active ? "#e9e4d8" : "#e3dfd7"}
           roughness={0.82}
           metalness={0.02}
         />
@@ -845,9 +855,9 @@ function Room({
 
       <Desk
         position={[
-          isLeft ? -0.7 : isRight ? 0.7 : 0,
+          isReception ? 0.7 : isLeft ? -0.7 : isRight ? 0.7 : 0,
           0,
-          isReception ? -0.3 : -0.25,
+          isReception ? -0.45 : -0.25,
         ]}
         rotation={isRight ? Math.PI : 0}
       />
@@ -973,6 +983,18 @@ function Room({
   );
 }
 
+function FixedIsometricCamera() {
+  const { camera } = useThree();
+
+  useEffect(() => {
+    camera.position.set(12.5, 13.5, 16.5);
+    camera.lookAt(0, 0.2, -5.3);
+    camera.updateProjectionMatrix();
+  }, [camera]);
+
+  return null;
+}
+
 function Player({
   onNearby,
   onAreaChange,
@@ -1011,8 +1033,6 @@ function Player({
   const lastMoving = useRef(false);
   const pathRef = useRef<THREE.Vector3[]>([]);
   const pathIndexRef = useRef(0);
-  const { camera } = useThree();
-  const lookTarget = useRef(new THREE.Vector3(0, 0.5, 0));
   const [moving, setMoving] = useState(false);
 
   useEffect(() => {
@@ -1273,16 +1293,7 @@ function Player({
       onAreaChange(area);
     }
 
-    const cameraTarget = new THREE.Vector3(
-      p.x + 7.4,
-      8.6,
-      p.z + 7.4,
-    );
-    const target = new THREE.Vector3(p.x, 0.55, p.z);
 
-    camera.position.lerp(cameraTarget, 0.055);
-    lookTarget.current.lerp(target, 0.1);
-    camera.lookAt(lookTarget.current);
   });
 
   return (
@@ -1378,13 +1389,14 @@ function World({
 
   return (
     <>
-      <color attach="background" args={["#e7e6df"]} />
-      <fog attach="fog" args={["#e7e6df", 24, 48]} />
-      <hemisphereLight args={["#f6f2e8", "#73786f", 1.5]} />
-      <ambientLight intensity={0.58} />
+      <FixedIsometricCamera />
+      <color attach="background" args={["#efebe4"]} />
+      <fog attach="fog" args={["#efebe4", 28, 55]} />
+      <hemisphereLight args={["#fffaf2", "#8c8a83", 1.45]} />
+      <ambientLight intensity={0.68} />
       <directionalLight
         position={[8, 14, 8]}
-        intensity={2.25}
+        intensity={2.0}
         castShadow
         shadow-mapSize={[1024, 1024]}
       />
@@ -1400,7 +1412,7 @@ function World({
         }}
       >
         <planeGeometry args={[19, 22]} />
-        <meshStandardMaterial color="#bfc0b9" roughness={0.88} metalness={0.03} />
+        <meshStandardMaterial color="#ddd8cf" roughness={0.9} metalness={0.01} />
       </mesh>
 
       <mesh
@@ -1413,7 +1425,7 @@ function World({
         }}
       >
         <planeGeometry args={[3.3, 16.3]} />
-        <meshStandardMaterial color="#d9d7cf" roughness={0.7} metalness={0.02} />
+        <meshStandardMaterial color="#e9e4dc" roughness={0.78} metalness={0.01} />
       </mesh>
 
       <Text
@@ -1429,12 +1441,12 @@ function World({
       <Wall
         position={[-9.05, WALL_HEIGHT / 2, -5.15]}
         size={[WALL_THICKNESS, WALL_HEIGHT, 21.5]}
-        color="#d7d5ce"
+        color="#f1eee8"
       />
       <Wall
         position={[9.05, WALL_HEIGHT / 2, -5.15]}
         size={[WALL_THICKNESS, WALL_HEIGHT, 21.5]}
-        color="#d7d5ce"
+        color="#f1eee8"
       />
 
       <group position={[0, 0, 0.56]}>
@@ -1575,7 +1587,7 @@ export default function OfficeScene({
       orthographic
       shadows
       dpr={[1, 1.15]}
-      camera={{ position: [7.4, 8.6, 11.75], zoom: 58, near: 0.1, far: 80 }}
+      camera={{ position: [12.5, 13.5, 16.5], zoom: 43, near: 0.1, far: 90 }}
     >
       <World
         selected={selected}
