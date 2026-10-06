@@ -12,12 +12,18 @@ type Props = {
   onNearby: (department: Department | null) => void;
   onAreaChange: (department: Department | null) => void;
   activeDepartmentId: Department["id"] | null;
+  unlockedDepartments: Department["id"][];
+  onRestrictedAttempt: (department: Department) => void;
 };
 
 const WALL_HEIGHT = 1.6;
 const WALL_THICKNESS = 0.12;
 
-function isWalkable(x: number, z: number) {
+function isWalkable(
+  x: number,
+  z: number,
+  unlockedDepartments: Set<Department["id"]>,
+) {
   const inRect = (
     px: number,
     pz: number,
@@ -54,11 +60,14 @@ function isWalkable(x: number, z: number) {
     const [cx, , cz] = department.position;
     const [width, , depth] = department.size;
 
-    if (inRect(x, z, cx, cz, width - 0.36, depth - 0.36)) return true;
+    const locked =
+      department.requiresCredentials && !unlockedDepartments.has(department.id);
+
+    if (!locked && inRect(x, z, cx, cz, width - 0.36, depth - 0.36)) return true;
 
     const doorZ = cz + 0.35;
     const connectorX = cx < 0 ? -2.03 : 2.03;
-    if (inRect(x, z, connectorX, doorZ, 1.45, 1.35)) return true;
+    if (!locked && inRect(x, z, connectorX, doorZ, 1.45, 1.35)) return true;
   }
 
   return false;
@@ -259,10 +268,14 @@ function NPC({
   department,
   active,
   onSelect,
+  unlocked,
+  onRestrictedAttempt,
 }: {
   department: Department;
   active: boolean;
   onSelect: (department: Department) => void;
+  unlocked: boolean;
+  onRestrictedAttempt: (department: Department) => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const ref = useRef<THREE.Group>(null);
@@ -444,6 +457,10 @@ function Room({
         receiveShadow
         onClick={(event) => {
           event.stopPropagation();
+          if (department.requiresCredentials && !unlocked) {
+            onRestrictedAttempt(department);
+            return;
+          }
           onSelect(department);
         }}
       >
@@ -476,7 +493,7 @@ function Room({
           <GlassDoor
             position={[innerWallX + (isLeft ? -0.04 : 0.04), 0, 0.35]}
             rotation={doorRotation}
-            open={active}
+            open={department.requiresCredentials ? unlocked : active}
           />
         </>
       )}
@@ -501,6 +518,25 @@ function Room({
         rotation={isRight ? Math.PI : 0}
       />
 
+      {department.requiresCredentials && !unlocked && (
+        <Html
+          position={[innerWallX + (isLeft ? 0.18 : -0.18), 1.35, 0.35]}
+          center
+          distanceFactor={10}
+        >
+          <button
+            className="door-access-badge"
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onRestrictedAttempt(department);
+            }}
+          >
+            🔒 ACESSO RESTRITO
+          </button>
+        </Html>
+      )}
+
       <DepartmentProps department={department} />
     </group>
   );
@@ -511,11 +547,13 @@ function Player({
   onAreaChange,
   onInteract,
   focusDepartment,
+  unlockedDepartments,
 }: {
   onNearby: Props["onNearby"];
   onAreaChange: Props["onAreaChange"];
   onInteract: Props["onSelect"];
   focusDepartment: Department | null;
+  unlockedDepartments: Set<Department["id"]>;
 }) {
   const ref = useRef<THREE.Group>(null);
   const keys = useRef<Record<string, boolean>>({});
@@ -573,8 +611,8 @@ function Player({
       const nextX = p.x + (dx / magnitude) * speed;
       const nextZ = p.z + (dz / magnitude) * speed;
 
-      if (isWalkable(nextX, p.z)) p.x = nextX;
-      if (isWalkable(p.x, nextZ)) p.z = nextZ;
+      if (isWalkable(nextX, p.z, unlockedDepartments)) p.x = nextX;
+      if (isWalkable(p.x, nextZ, unlockedDepartments)) p.z = nextZ;
 
       ref.current.rotation.y = Math.atan2(dx, dz);
     }
@@ -673,12 +711,16 @@ function World({
   onSelect,
   onNearby,
   onAreaChange,
+  unlockedDepartments,
+  onRestrictedAttempt,
 }: {
   selected: Department | null;
   nearby: Department | null;
   onSelect: Props["onSelect"];
   onNearby: Props["onNearby"];
   onAreaChange: Props["onAreaChange"];
+  unlockedDepartments: Set<Department["id"]>;
+  onRestrictedAttempt: Props["onRestrictedAttempt"];
 }) {
   const grid = useMemo(() => new THREE.GridHelper(28, 28, "#8b8e86", "#c4c7bf"), []);
 
@@ -728,6 +770,10 @@ function World({
           department={department}
           active={selected?.id === department.id || nearby?.id === department.id}
           onSelect={onSelect}
+          unlocked={
+            !department.requiresCredentials || unlockedDepartments.has(department.id)
+          }
+          onRestrictedAttempt={onRestrictedAttempt}
         />
       ))}
 
@@ -745,6 +791,7 @@ function World({
         onAreaChange={onAreaChange}
         onInteract={onSelect}
         focusDepartment={selected}
+        unlockedDepartments={unlockedDepartments}
       />
     </>
   );
@@ -755,9 +802,15 @@ export default function OfficeScene({
   onNearby,
   onAreaChange,
   activeDepartmentId,
+  unlockedDepartments,
+  onRestrictedAttempt,
 }: Props) {
   const [selected, setSelected] = useState<Department | null>(null);
   const [nearby, setNearby] = useState<Department | null>(null);
+  const unlockedSet = useMemo(
+    () => new Set<Department["id"]>(unlockedDepartments),
+    [unlockedDepartments],
+  );
 
   useEffect(() => {
     setSelected(
@@ -785,6 +838,8 @@ export default function OfficeScene({
         onSelect={select}
         onNearby={nearbyChange}
         onAreaChange={onAreaChange}
+        unlockedDepartments={unlockedSet}
+        onRestrictedAttempt={onRestrictedAttempt}
       />
     </Canvas>
   );
