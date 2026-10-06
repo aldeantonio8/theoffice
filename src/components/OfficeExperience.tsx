@@ -30,70 +30,70 @@ const panelCopy: Record<
   { eyebrow: string; title: string; body: string; items?: string[] }
 > = {
   culture: {
-    eyebrow: "People & Culture",
-    title: "Life inside The Office.",
-    body: "A good logistics company is built by people who communicate clearly, solve problems quickly and take ownership of every handover.",
-    items: ["Learning & growth", "Safety first", "Team accountability", "Customer focus"],
+    eyebrow: "Pessoas & Cultura",
+    title: "A vida dentro do The Office.",
+    body: "Uma boa empresa de logística é construída por pessoas que comunicam com clareza, resolvem problemas rapidamente e assumem responsabilidade em cada etapa.",
+    items: ["Aprendizagem e crescimento", "Segurança em primeiro lugar", "Responsabilidade da equipa", "Foco no cliente"],
   },
   services: {
-    eyebrow: "Operations",
-    title: "Moving cargo from A to B is only the beginning.",
-    body: "The Operations room represents the services that keep cargo visible, controlled and moving.",
-    items: ["Road freight", "Sea freight", "Air freight", "Customs clearance", "Warehousing", "Last-mile delivery"],
+    eyebrow: "Operações",
+    title: "Mover carga de A para B é apenas o começo.",
+    body: "A área de Operações representa os serviços que mantêm a carga visível, controlada e em movimento.",
+    items: ["Transporte rodoviário", "Transporte marítimo", "Transporte aéreo", "Desalfandegamento", "Armazenagem", "Distribuição final"],
   },
   routes: {
-    eyebrow: "Operations",
-    title: "One room. Many routes.",
-    body: "This prototype uses a control-room metaphor. In a production version, the wall screens can become an interactive map with real offices, corridors and project routes.",
-    items: ["Maputo", "Nacala", "Beira", "Johannesburg", "Regional corridors"],
+    eyebrow: "Operações",
+    title: "Uma sala. Muitas rotas.",
+    body: "Este protótipo usa a metáfora de uma sala de controlo. Numa versão final, os ecrãs podem transformar-se num mapa interativo com escritórios, corredores logísticos e rotas reais.",
+    items: ["Maputo", "Nacala", "Beira", "Joanesburgo", "Corredores regionais"],
   },
   story: {
-    eyebrow: "Director's Office",
-    title: "Built around movement and trust.",
-    body: "The Office is a portfolio concept for a logistics business: instead of explaining the company through static pages, visitors meet it as a place, room by room.",
-    items: ["Company story", "Capabilities", "Projects", "Team", "Contact"],
+    eyebrow: "Gabinete da Direção",
+    title: "Construído à volta de movimento e confiança.",
+    body: "The Office é um conceito de portfólio para uma empresa de logística: em vez de explicar a empresa através de páginas estáticas, o visitante conhece-a como um lugar, sala por sala.",
+    items: ["História da empresa", "Capacidades", "Projetos", "Equipa", "Contacto"],
   },
   vision: {
-    eyebrow: "Director's Office",
-    title: "Make the website feel like the company.",
-    body: "The long-term vision is an explorable 3D office where every department becomes a real digital service: careers, procurement, project cases, meetings and logistics operations.",
-    items: ["Immersive", "Useful", "Fast", "Human", "Memorable"],
+    eyebrow: "Gabinete da Direção",
+    title: "Fazer o website sentir-se como a própria empresa.",
+    body: "A visão é criar um escritório 3D explorável onde cada departamento se transforma num serviço digital real: carreiras, procurement, projetos, reuniões e operações logísticas.",
+    items: ["Imersivo", "Útil", "Rápido", "Humano", "Memorável"],
   },
   tour: {
-    eyebrow: "Reception",
-    title: "Choose where to start.",
-    body: "You can walk naturally with WASD, or use this directory to understand what each room represents.",
+    eyebrow: "Receção",
+    title: "Escolha por onde começar.",
+    body: "Pode caminhar normalmente com WASD ou usar o diretório para perceber o que cada sala representa.",
     items: departments.map((department) => `${department.label} — ${department.eyebrow}`),
   },
   help: {
-    eyebrow: "Reception",
-    title: "How The Office works.",
-    body: "Walk close to a team member. When the prompt appears, press E or click the person. Every conversation replaces a traditional website section.",
-    items: ["WASD / arrows to move", "E to talk", "Click a person on desktop", "Directional controls on mobile"],
+    eyebrow: "Receção",
+    title: "Como funciona o The Office.",
+    body: "Aproxime-se de um membro da equipa. Quando surgir a indicação, pressione E ou clique na pessoa. Cada conversa substitui uma secção tradicional de website.",
+    items: ["WASD / setas para mover", "E para conversar", "Clique numa pessoa no computador", "Controlos direcionais no telemóvel"],
   },
   projects: {
-    eyebrow: "Projects Room",
-    title: "Selected work lives here.",
-    body: "Every case study can become an exhibit inside this room, combining context, process, visual work and measurable outcomes.",
-    items: ["Case 01 — Brand system", "Case 02 — Product experience", "Case 03 — Digital platform", "Case 04 — Campaign"],
+    eyebrow: "Sala de Projetos",
+    title: "Os projetos selecionados vivem aqui.",
+    body: "Cada caso transforma-se numa exposição dentro da sala, combinando contexto, processo, execução e resultados.",
+    items: ["Caso 01 — Otimização de distribuição", "Caso 02 — Operação de carga regional", "Caso 03 — Solução de armazenagem", "Caso 04 — Projeto de procurement"],
   },
   projectMethod: {
-    eyebrow: "Projects Room",
-    title: "From brief to outcome.",
-    body: "The room can show not only finished work but also how decisions were made, what constraints existed and what changed after delivery.",
-    items: ["Context", "Challenge", "Approach", "Execution", "Result"],
+    eyebrow: "Sala de Projetos",
+    title: "Do briefing ao resultado.",
+    body: "A sala mostra não apenas o resultado final, mas também como as decisões foram tomadas, que limitações existiam e o que mudou depois da entrega.",
+    items: ["Contexto", "Desafio", "Abordagem", "Execução", "Resultado"],
   },
   contact: {
-    eyebrow: "Meeting Room",
-    title: "Start a conversation.",
-    body: "The Meeting Room acts as the contact section of the portfolio. A production version can connect this flow to email, CRM or Supabase.",
-    items: ["New project", "Partnership", "General enquiry", "Collaboration"],
+    eyebrow: "Sala de Reuniões",
+    title: "Inicie uma conversa.",
+    body: "A Sala de Reuniões funciona como a área de contacto do portfólio. A versão final poderá ligar este fluxo ao email, CRM ou Supabase.",
+    items: ["Novo projeto", "Parceria", "Pedido de informação", "Colaboração"],
   },
   meeting: {
-    eyebrow: "Meeting Room",
-    title: "Book time inside The Office.",
-    body: "This can become a lightweight scheduling flow where visitors choose a purpose, preferred date and contact information without leaving the experience.",
-    items: ["Discovery call", "Project review", "Partnership meeting", "Portfolio walkthrough"],
+    eyebrow: "Sala de Reuniões",
+    title: "Marque uma reunião dentro do The Office.",
+    body: "Este espaço pode tornar-se num fluxo simples de agendamento, onde o visitante escolhe o objetivo, a data preferida e os dados de contacto sem sair da experiência.",
+    items: ["Reunião inicial", "Revisão de projeto", "Reunião de parceria", "Apresentação do portfólio"],
   },
 };
 
@@ -150,20 +150,20 @@ export default function OfficeExperience() {
 
   const handleAction = (action: string) => {
     const actions: Record<string, Panel> = {
-      "Submit CV": "cv",
-      "Life at the company": "culture",
-      "Request a product": "procurement",
-      "Become a supplier": "supplier",
-      "Explore services": "services",
-      "View routes": "routes",
-      "Our story": "story",
-      "Our vision": "vision",
-      "Start tour": "tour",
-      "How does this work?": "help",
-      "View case studies": "projects",
-      "How projects work": "projectMethod",
-      "Start a conversation": "contact",
-      "Book a meeting": "meeting",
+      "Submeter CV": "cv",
+      "Vida na empresa": "culture",
+      "Solicitar produto": "procurement",
+      "Tornar-se fornecedor": "supplier",
+      "Explorar serviços": "services",
+      "Ver rotas": "routes",
+      "A nossa história": "story",
+      "A nossa visão": "vision",
+      "Iniciar visita": "tour",
+      "Como funciona?": "help",
+      "Ver projetos": "projects",
+      "Como trabalhamos": "projectMethod",
+      "Iniciar conversa": "contact",
+      "Marcar reunião": "meeting",
     };
 
     openPanel(actions[action] ?? null);
@@ -191,8 +191,8 @@ export default function OfficeExperience() {
           THE OFFICE
         </a>
         <div className="topbar-meta">
-          <span>Interactive portfolio</span>
-          <span className="status-dot">Office open</span>
+          <span>Portfólio interativo</span>
+          <span className="status-dot">Escritório aberto</span>
         </div>
       </header>
 
@@ -205,14 +205,14 @@ export default function OfficeExperience() {
         />
 
         <div className="area-indicator">
-          <span>You are in</span>
-          <strong>{currentArea?.label ?? "Main corridor"}</strong>
+          <span>Está em</span>
+          <strong>{currentArea?.label ?? "Corredor principal"}</strong>
         </div>
 
         {entered && (
           <aside className="mini-map" aria-label="Office mini map">
             <div className="mini-map-head">
-              <span>Office map</span>
+              <span>Mapa do escritório</span>
               <strong>{visited.length}/{departments.length}</strong>
             </div>
             <div className="mini-map-grid">
@@ -234,7 +234,7 @@ export default function OfficeExperience() {
                 </button>
               ))}
               <div className="mini-corridor" aria-hidden="true" />
-              <div className="mini-you" aria-hidden="true">YOU</div>
+              <div className="mini-you" aria-hidden="true">VOCÊ</div>
             </div>
           </aside>
         )}
@@ -244,13 +244,13 @@ export default function OfficeExperience() {
           type="button"
           onClick={() => setDirectoryOpen((open) => !open)}
         >
-          Directory
+          Diretório
           <span>{directoryOpen ? "×" : "+"}</span>
         </button>
 
         {directoryOpen && (
           <nav className="directory-panel" aria-label="Office directory">
-            <span className="eyebrow">Quick navigation</span>
+            <span className="eyebrow">Navegação rápida</span>
             {departments.map((department, index) => (
               <button
                 key={department.id}
@@ -269,9 +269,9 @@ export default function OfficeExperience() {
         )}
 
         <div className="controls">
-          <span>MOVE</span>
+          <span>MOVER</span>
           <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
-          <span className="controls-separator">Walk to a person and press E</span>
+          <span className="controls-separator">Aproxime-se de uma pessoa e pressione E</span>
         </div>
 
         <div className="mobile-dpad" aria-label="Movement controls">
@@ -313,13 +313,13 @@ export default function OfficeExperience() {
 
         {entered && (
           <div className="objective-card">
-            <span>Current objective</span>
+            <span>Objetivo atual</span>
             <strong>
               {visited.length === 0
-                ? "Meet Mia at Reception"
+                ? "Fale com a Mia na Receção"
                 : visited.length < departments.length
-                  ? `Explore the office · ${visited.length}/${departments.length}`
-                  : "Office tour complete"}
+                  ? `Explore o escritório · ${visited.length}/${departments.length}`
+                  : "Visita ao escritório concluída"}
             </strong>
           </div>
         )}
@@ -327,7 +327,7 @@ export default function OfficeExperience() {
         {nearby && !selected && (
           <button className="talk-prompt" type="button" onClick={() => handleSelect(nearby)}>
             <span className="talk-key">E</span>
-            Talk to {nearby.npcName}
+            Falar com {nearby.npcName}
           </button>
         )}
 
@@ -385,7 +385,7 @@ export default function OfficeExperience() {
                     </div>
                   )}
                   <button className="panel-back" type="button" onClick={closePanel}>
-                    Back to the office <span>→</span>
+                    Voltar ao escritório <span>→</span>
                   </button>
                 </div>
               </>
@@ -395,17 +395,17 @@ export default function OfficeExperience() {
                   <div>
                     <span className="eyebrow">
                       {panel === "cv"
-                        ? "Human Resources"
+                        ? "Recursos Humanos"
                         : panel === "supplier"
-                          ? "Procurement · Suppliers"
-                          : "Procurement · Request"}
+                          ? "Procurement · Fornecedores"
+                          : "Procurement · Pedido"}
                     </span>
                     <h2>
                       {panel === "cv"
-                        ? "Leave your CV with us."
+                        ? "Deixe o seu CV connosco."
                         : panel === "supplier"
-                          ? "Become a supplier."
-                          : "Tell us what you need."}
+                          ? "Torne-se nosso fornecedor."
+                          : "Diga-nos do que precisa."}
                     </h2>
                   </div>
                   <button type="button" aria-label="Close form" onClick={closePanel}>
@@ -415,41 +415,41 @@ export default function OfficeExperience() {
 
                 {submitted ? (
                   <div className="form-success">
-                    <span>REQUEST RECEIVED</span>
-                    <h3>Thank you.</h3>
+                    <span>PEDIDO RECEBIDO</span>
+                    <h3>Obrigado.</h3>
                     <p>
-                      The interaction is complete on the front end. The next backend step is to store
-                      submissions and uploaded files in Supabase.
+                      A interação está concluída no front-end. O próximo passo será guardar os
+                      pedidos e ficheiros enviados no Supabase.
                     </p>
                     <button type="button" onClick={closePanel}>
-                      Back to the office
+                      Voltar ao escritório
                     </button>
                   </div>
                 ) : panel === "cv" ? (
                   <form className="cv-form" onSubmit={submitDemo}>
                     <label>
-                      Full name
-                      <input name="name" type="text" placeholder="Your name" required />
+                      Nome completo
+                      <input name="name" type="text" placeholder="O seu nome" required />
                     </label>
                     <label>
                       Email
-                      <input name="email" type="email" placeholder="you@email.com" required />
+                      <input name="email" type="email" placeholder="voce@email.com" required />
                     </label>
                     <label>
-                      Phone
+                      Telefone
                       <input name="phone" type="tel" placeholder="+258" />
                     </label>
                     <label>
-                      Area of interest
+                      Área de interesse
                       <select name="area" defaultValue="">
                         <option value="" disabled>
-                          Select an area
+                          Selecione uma área
                         </option>
-                        <option>Operations</option>
+                        <option>Operações</option>
                         <option>Procurement</option>
-                        <option>Commercial</option>
-                        <option>Technology</option>
-                        <option>Administration</option>
+                        <option>Comercial</option>
+                        <option>Tecnologia</option>
+                        <option>Administração</option>
                       </select>
                     </label>
                     <label className="form-full">
@@ -457,71 +457,71 @@ export default function OfficeExperience() {
                       <input name="cv" type="file" accept=".pdf,.doc,.docx" required />
                     </label>
                     <label className="form-full">
-                      Message
-                      <textarea name="message" rows={4} placeholder="Tell us a little about yourself." />
+                      Mensagem
+                      <textarea name="message" rows={4} placeholder="Conte-nos um pouco sobre si." />
                     </label>
                     <button className="submit-button form-full" type="submit">
-                      Submit application <span>→</span>
+                      Submeter candidatura <span>→</span>
                     </button>
                   </form>
                 ) : panel === "supplier" ? (
                   <form className="cv-form" onSubmit={submitDemo}>
                     <label>
-                      Company name
-                      <input name="company" type="text" placeholder="Company" required />
+                      Nome da empresa
+                      <input name="company" type="text" placeholder="Empresa" required />
                     </label>
                     <label>
-                      Contact person
-                      <input name="contact" type="text" placeholder="Full name" required />
+                      Pessoa de contacto
+                      <input name="contact" type="text" placeholder="Nome completo" required />
                     </label>
                     <label>
-                      Business email
-                      <input name="email" type="email" placeholder="you@company.com" required />
+                      Email empresarial
+                      <input name="email" type="email" placeholder="voce@empresa.com" required />
                     </label>
                     <label>
-                      Category
-                      <input name="category" type="text" placeholder="What do you supply?" required />
+                      Categoria
+                      <input name="category" type="text" placeholder="O que fornece?" required />
                     </label>
                     <label className="form-full">
-                      Company profile
+                      Perfil da empresa
                       <input name="profile" type="file" accept=".pdf,.doc,.docx" />
                     </label>
                     <label className="form-full">
                       Message
-                      <textarea name="message" rows={4} placeholder="Introduce your company." />
+                      <textarea name="message" rows={4} placeholder="Apresente a sua empresa." />
                     </label>
                     <button className="submit-button form-full" type="submit">
-                      Submit supplier profile <span>→</span>
+                      Submeter perfil de fornecedor <span>→</span>
                     </button>
                   </form>
                 ) : (
                   <form className="cv-form" onSubmit={submitDemo}>
                     <label>
-                      Product / material
-                      <input name="product" type="text" placeholder="What do you need?" required />
+                      Produto / material
+                      <input name="product" type="text" placeholder="O que precisa?" required />
                     </label>
                     <label>
-                      Quantity
-                      <input name="quantity" type="text" placeholder="e.g. 50 units" required />
+                      Quantidade
+                      <input name="quantity" type="text" placeholder="ex.: 50 unidades" required />
                     </label>
                     <label>
-                      Delivery location
-                      <input name="location" type="text" placeholder="City / country" required />
+                      Local de entrega
+                      <input name="location" type="text" placeholder="Cidade / país" required />
                     </label>
                     <label>
-                      Needed by
+                      Necessário até
                       <input name="date" type="date" />
                     </label>
                     <label className="form-full">
-                      Reference file
+                      Ficheiro de referência
                       <input name="reference" type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" />
                     </label>
                     <label className="form-full">
-                      Specifications
-                      <textarea name="details" rows={4} placeholder="Describe the item or requirements." />
+                      Especificações
+                      <textarea name="details" rows={4} placeholder="Descreva o produto ou os requisitos." />
                     </label>
                     <button className="submit-button form-full" type="submit">
-                      Send request <span>→</span>
+                      Enviar pedido <span>→</span>
                     </button>
                   </form>
                 )}
@@ -533,30 +533,30 @@ export default function OfficeExperience() {
 
       {!entered && (
         <div className={`intro ${entering ? "intro--leaving" : ""}`}>
-          <div className="intro-count">01 — ENTER</div>
+          <div className="intro-count">01 — ENTRAR</div>
           <div className="intro-content">
-            <p className="intro-kicker">A portfolio you can walk through.</p>
+            <p className="intro-kicker">Um portfólio onde pode entrar.</p>
             <h1>
-              Welcome to
+              Bem-vindo ao
               <br />
               The Office.
             </h1>
             <p className="intro-copy">
-              Step inside. Walk through the departments, meet the people and discover the company
-              like you were actually there.
+              Entre. Percorra os departamentos, conheça as pessoas e descubra a empresa
+              como se estivesse realmente lá.
             </p>
             <button className="enter-button" type="button" onClick={enterOffice} disabled={entering}>
-              {entering ? "Opening the doors..." : "Enter the office"}
+              {entering ? "A abrir as portas..." : "Entrar no escritório"}
               <span>→</span>
             </button>
             <div className="intro-controls">
-              <span>WASD to move</span>
-              <span>E to interact</span>
-              <span>ESC to close</span>
+              <span>WASD para mover</span>
+              <span>E para interagir</span>
+              <span>ESC para fechar</span>
             </div>
           </div>
           <div className="intro-footer">
-            <span>3D / WEB EXPERIENCE</span>
+            <span>EXPERIÊNCIA 3D / WEB</span>
             <span>© 2026</span>
           </div>
         </div>
