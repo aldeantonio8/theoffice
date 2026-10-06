@@ -157,9 +157,26 @@ export default function OfficeExperience() {
   const [visited, setVisited] = useState<Department["id"][]>([]);
   const [entering, setEntering] = useState(false);
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
-  const [visitorReady, setVisitorReady] = useState(false);
+  const [unlockedDepartments, setUnlockedDepartments] = useState<Department["id"][]>([]);
+  const [restrictedDepartment, setRestrictedDepartment] = useState<Department | null>(null);
+  const [accessError, setAccessError] = useState("");
+  const [accessLoading, setAccessLoading] = useState(false);
+
+  const requestRestrictedAccess = (department: Department) => {
+    setAccessError("");
+    setRestrictedDepartment(department);
+    setSelected(null);
+  };
 
   const handleSelect = (department: Department) => {
+    if (
+      department.requiresCredentials &&
+      !unlockedDepartments.includes(department.id)
+    ) {
+      requestRestrictedAccess(department);
+      return;
+    }
+
     setSelected(department);
     setVisited((current) =>
       current.includes(department.id) ? current : [...current, department.id],
@@ -169,6 +186,12 @@ export default function OfficeExperience() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+
+      if (restrictedDepartment) {
+        setRestrictedDepartment(null);
+        setAccessError("");
+        return;
+      }
 
       if (selectedProject !== null) {
         setSelectedProject(null);
@@ -191,30 +214,57 @@ export default function OfficeExperience() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [panel, directoryOpen, selected, selectedProject]);
+  }, [panel, directoryOpen, selected, selectedProject, restrictedDepartment]);
 
   const enterOffice = () => {
-    if (entering || !visitorReady) return;
+    if (entering) return;
     setEntering(true);
     window.setTimeout(() => setEntered(true), 620);
   };
 
-  const handleVisitorCheckIn = (event: FormEvent<HTMLFormElement>) => {
+  const submitDoorCredentials = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!restrictedDepartment || accessLoading) return;
 
     const form = new FormData(event.currentTarget);
-    const visitor = {
-      nome: String(form.get("visitorName") || "").trim(),
-      email: String(form.get("visitorEmail") || "").trim(),
-      empresa: String(form.get("visitorCompany") || "").trim(),
-      motivo: String(form.get("visitorPurpose") || "").trim(),
-      checkedInAt: new Date().toISOString(),
-    };
+    const email = String(form.get("accessEmail") || "").trim();
+    const password = String(form.get("accessPassword") || "");
 
-    if (!visitor.nome || !visitor.email || !visitor.motivo) return;
+    setAccessError("");
+    setAccessLoading(true);
 
-    sessionStorage.setItem("theoffice-visitor", JSON.stringify(visitor));
-    setVisitorReady(true);
+    try {
+      const response = await fetch("/api/access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          departmentId: restrictedDepartment.id,
+        }),
+      });
+
+      const result = (await response.json()) as {
+        ok?: boolean;
+        message?: string;
+      };
+
+      if (!response.ok || !result.ok) {
+        setAccessError(result.message || "Não foi possível validar as credenciais.");
+        return;
+      }
+
+      const departmentId = restrictedDepartment.id;
+      setUnlockedDepartments((current) =>
+        current.includes(departmentId) ? current : [...current, departmentId],
+      );
+      setRestrictedDepartment(null);
+      setAccessError("");
+    } catch {
+      setAccessError("Erro de ligação. Tente novamente.");
+    } finally {
+      setAccessLoading(false);
+    }
   };
 
   const openPanel = (next: Panel) => {
@@ -277,6 +327,8 @@ export default function OfficeExperience() {
           onNearby={setNearby}
           onAreaChange={setCurrentArea}
           activeDepartmentId={selected?.id ?? null}
+          unlockedDepartments={unlockedDepartments}
+          onRestrictedAttempt={requestRestrictedAccess}
         />
 
         <div className="area-indicator">
@@ -432,6 +484,70 @@ export default function OfficeExperience() {
           </aside>
         )}
       </section>
+
+      {restrictedDepartment && (
+        <div className="access-backdrop" role="dialog" aria-modal="true" aria-label="Acesso restrito">
+          <div className="access-panel">
+            <div className="access-panel-head">
+              <div>
+                <span>PORTA RESTRITA</span>
+                <h2>{restrictedDepartment.label}</h2>
+              </div>
+              <button
+                type="button"
+                aria-label="Fechar acesso"
+                onClick={() => {
+                  setRestrictedDepartment(null);
+                  setAccessError("");
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <p>
+              Esta área requer autorização. Introduza o email e a password de acesso
+              para desbloquear a porta.
+            </p>
+
+            <form className="access-form" onSubmit={submitDoorCredentials}>
+              <label>
+                Email
+                <input
+                  name="accessEmail"
+                  type="email"
+                  placeholder="email@empresa.com"
+                  autoComplete="username"
+                  required
+                  autoFocus
+                />
+              </label>
+
+              <label>
+                Password
+                <input
+                  name="accessPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  required
+                />
+              </label>
+
+              {accessError && <p className="access-error">{accessError}</p>}
+
+              <button type="submit" disabled={accessLoading}>
+                {accessLoading ? "A validar..." : "Desbloquear porta"}
+                <span>→</span>
+              </button>
+            </form>
+
+            <small>
+              As credenciais são validadas no servidor e não ficam expostas no código do navegador.
+            </small>
+          </div>
+        </div>
+      )}
 
       {panel && (
         <div className="modal-backdrop" role="dialog" aria-modal="true">
@@ -682,85 +798,15 @@ export default function OfficeExperience() {
               The Office.
             </h1>
             <p className="intro-copy">
-              Antes de entrar, faça um pequeno check-in na receção. Depois poderá percorrer
-              os departamentos, conhecer as pessoas e explorar a empresa.
+              Entre. Percorra os departamentos, conheça as pessoas e descubra a empresa
+              como se estivesse realmente lá.
             </p>
-
-            {!visitorReady ? (
-              <form className="visitor-checkin" onSubmit={handleVisitorCheckIn}>
-                <div className="visitor-checkin-head">
-                  <span>CHECK-IN DE VISITANTE</span>
-                  <strong>Identifique-se para entrar</strong>
-                </div>
-
-                <label>
-                  Nome completo *
-                  <input
-                    name="visitorName"
-                    type="text"
-                    placeholder="O seu nome"
-                    autoComplete="name"
-                    required
-                  />
-                </label>
-
-                <label>
-                  Email *
-                  <input
-                    name="visitorEmail"
-                    type="email"
-                    placeholder="voce@email.com"
-                    autoComplete="email"
-                    required
-                  />
-                </label>
-
-                <label>
-                  Empresa
-                  <input
-                    name="visitorCompany"
-                    type="text"
-                    placeholder="Empresa ou organização"
-                    autoComplete="organization"
-                  />
-                </label>
-
-                <label>
-                  Motivo da visita *
-                  <select name="visitorPurpose" defaultValue="" required>
-                    <option value="" disabled>
-                      Selecione uma opção
-                    </option>
-                    <option value="conhecer-empresa">Conhecer a empresa</option>
-                    <option value="servicos">Conhecer os serviços</option>
-                    <option value="carreiras">Carreiras / emprego</option>
-                    <option value="procurement">Procurement / fornecimento</option>
-                    <option value="projeto">Novo projeto / parceria</option>
-                    <option value="outro">Outro</option>
-                  </select>
-                </label>
-
-                <p className="visitor-note">
-                  Ao continuar, estes dados são usados apenas para identificar a sua visita.
-                  Nesta fase do protótipo ficam guardados apenas nesta sessão do navegador.
-                </p>
-
-                <button className="checkin-button" type="submit">
-                  Fazer check-in <span>→</span>
-                </button>
-              </form>
-            ) : (
-              <div className="visitor-approved">
-                <span>CHECK-IN CONCLUÍDO</span>
-                <strong>Pode entrar no escritório.</strong>
-              </div>
-            )}
 
             <button
               className="enter-button"
               type="button"
               onClick={enterOffice}
-              disabled={entering || !visitorReady}
+              disabled={entering}
             >
               {entering ? "A abrir as portas..." : "Entrar no escritório"}
               <span>→</span>
