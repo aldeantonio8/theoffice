@@ -75,6 +75,7 @@ export default function OfficeExperience() {
   const [nearby, setNearby] = useState<Department | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [directoryOpen, setDirectoryOpen] = useState(false);
 
   const openPanel = (next: Panel) => {
     setSubmitted(false);
@@ -126,7 +127,40 @@ export default function OfficeExperience() {
       </header>
 
       <section className="scene-shell" aria-label="Interactive 3D office">
-        <OfficeScene onSelect={setSelected} onNearby={setNearby} />
+        <OfficeScene
+          onSelect={setSelected}
+          onNearby={setNearby}
+          activeDepartmentId={selected?.id ?? null}
+        />
+
+        <button
+          className="directory-toggle"
+          type="button"
+          onClick={() => setDirectoryOpen((open) => !open)}
+        >
+          Directory
+          <span>{directoryOpen ? "×" : "+"}</span>
+        </button>
+
+        {directoryOpen && (
+          <nav className="directory-panel" aria-label="Office directory">
+            <span className="eyebrow">Quick navigation</span>
+            {departments.map((department, index) => (
+              <button
+                key={department.id}
+                type="button"
+                onClick={() => {
+                  setSelected(department);
+                  setDirectoryOpen(false);
+                }}
+              >
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <strong>{department.label}</strong>
+                <em>{department.eyebrow}</em>
+              </button>
+            ))}
+          </nav>
+        )}
 
         <div className="controls">
           <span>MOVE</span>
