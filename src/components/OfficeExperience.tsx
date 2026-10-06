@@ -76,6 +76,7 @@ export default function OfficeExperience() {
   const [panel, setPanel] = useState<Panel>(null);
   const [submitted, setSubmitted] = useState(false);
   const [directoryOpen, setDirectoryOpen] = useState(false);
+  const [currentArea, setCurrentArea] = useState<Department | null>(null);
 
   const openPanel = (next: Panel) => {
     setSubmitted(false);
@@ -130,8 +131,14 @@ export default function OfficeExperience() {
         <OfficeScene
           onSelect={setSelected}
           onNearby={setNearby}
+          onAreaChange={setCurrentArea}
           activeDepartmentId={selected?.id ?? null}
         />
+
+        <div className="area-indicator">
+          <span>{currentArea ? "You are in" : "You are in"}</span>
+          <strong>{currentArea?.label ?? "Main corridor"}</strong>
+        </div>
 
         <button
           className="directory-toggle"
