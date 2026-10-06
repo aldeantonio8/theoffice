@@ -869,6 +869,7 @@ function Room({
   onSubmitCredentials,
   onCloseAccess,
   doorNearby,
+  receptionCleared,
 }: {
   department: Department;
   active: boolean;
@@ -882,6 +883,7 @@ function Room({
   onSubmitCredentials: Props["onSubmitCredentials"];
   onCloseAccess: Props["onCloseAccess"];
   doorNearby: boolean;
+  receptionCleared: boolean;
 }) {
   const [x, , z] = department.position;
   const [w, , d] = department.size;
@@ -1639,6 +1641,7 @@ function World({
           onSubmitCredentials={onSubmitCredentials}
           onCloseAccess={onCloseAccess}
           doorNearby={nearDoor?.id === department.id}
+          receptionCleared={receptionCleared}
         />
       ))}
 
