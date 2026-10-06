@@ -416,7 +416,7 @@ export default function OfficeExperience() {
         <div className="controls">
           <span>MOVER</span>
           <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
-          <span className="controls-separator">Aproxime-se de uma pessoa e pressione E</span>
+          <span className="controls-separator">Clique no chão para caminhar · clique numa pessoa para falar</span>
         </div>
 
         <div className="mobile-dpad" aria-label="Controlos de movimento">
@@ -908,8 +908,8 @@ export default function OfficeExperience() {
             </button>
 
             <div className="intro-controls">
-              <span>WASD para mover</span>
-              <span>E para interagir</span>
+              <span>Clique no chão para caminhar</span>
+              <span>WASD também funciona</span>
               <span>ESC para fechar</span>
             </div>
           </div>
