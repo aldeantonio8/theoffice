@@ -1,4 +1,11 @@
-export type DepartmentId = "reception" | "hr" | "operations" | "procurement" | "director";
+export type DepartmentId =
+  | "reception"
+  | "hr"
+  | "operations"
+  | "procurement"
+  | "director"
+  | "projects"
+  | "meeting";
 
 export type Department = {
   id: DepartmentId;
@@ -85,5 +92,33 @@ export const departments: Department[] = [
     position: [5.2, 0, -7.4],
     size: [5.4, 0, 4.2],
     npcPosition: [4.2, 0, -6.8],
+  },
+  {
+    id: "projects",
+    label: "Projects Room",
+    eyebrow: "Portfolio",
+    title: "See the work, not just the promise.",
+    body: "The Projects Room turns case studies into physical exhibits. Each project can become a station with visuals, results and a short walkthrough.",
+    actions: ["View case studies", "How projects work"],
+    npcName: "Amara",
+    npcRole: "Project Lead",
+    greeting: "This is our project archive. Pick a case and I will show you what was built, how it worked and what changed.",
+    position: [-5.2, 0, -12.5],
+    size: [5.4, 0, 4.2],
+    npcPosition: [-4.2, 0, -11.9],
+  },
+  {
+    id: "meeting",
+    label: "Meeting Room",
+    eyebrow: "Contact",
+    title: "Ready to talk?",
+    body: "The Meeting Room is the final stop: a place to start a conversation, request a meeting or leave a project brief.",
+    actions: ["Start a conversation", "Book a meeting"],
+    npcName: "Noah",
+    npcRole: "Client Partner",
+    greeting: "Glad you made it here. Tell me what you are building and we can take the conversation forward.",
+    position: [5.2, 0, -12.5],
+    size: [5.4, 0, 4.2],
+    npcPosition: [4.2, 0, -11.9],
   },
 ];
