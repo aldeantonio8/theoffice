@@ -264,7 +264,16 @@ function NPC({
   onSelect: (department: Department) => void;
 }) {
   const [hovered, setHovered] = useState(false);
+  const ref = useRef<THREE.Group>(null);
   const [x, , z] = department.npcPosition;
+  const idleOffset = department.id.length * 0.63;
+
+  useFrame(({ clock }) => {
+    if (!ref.current) return;
+    const t = clock.elapsedTime + idleOffset;
+    ref.current.position.y = Math.sin(t * (active ? 2.1 : 1.25)) * 0.025;
+    ref.current.rotation.y = Math.sin(t * 0.7) * (active ? 0.06 : 0.025);
+  });
 
   const click = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
@@ -273,6 +282,7 @@ function NPC({
 
   return (
     <group
+      ref={ref}
       position={[x, 0, z]}
       onClick={click}
       onPointerEnter={() => setHovered(true)}
@@ -294,6 +304,12 @@ function NPC({
         <capsuleGeometry args={[0.075, 0.52, 4, 8]} />
         <meshStandardMaterial color={active || hovered ? "#d9ff65" : "#30342f"} />
       </mesh>
+      {active && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
+          <torusGeometry args={[0.47, 0.025, 8, 32]} />
+          <meshBasicMaterial color="#d9ff65" />
+        </mesh>
+      )}
       <Html position={[0, 2.02, 0]} center distanceFactor={11}>
         <div className={`npc-tag ${active ? "npc-tag--active" : ""}`}>
           <strong>{department.npcName}</strong>
