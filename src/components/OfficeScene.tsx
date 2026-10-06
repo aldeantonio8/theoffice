@@ -40,15 +40,96 @@ const NPC_DEPARTMENT_IDS = new Set<Department["id"]>([
   "meeting",
 ]);
 
-const ROOM_PLATES: Record<Department["id"], string> = {
-  reception: "RECEPTION",
-  hr: "HR",
-  procurement: "PROCUREMENT",
-  operations: "OPS",
-  director: "DIRECTOR",
-  projects: "PROJECTS",
-  meeting: "MEETING",
+const ROOM_PLATES: Record<
+  Department["id"],
+  { code: string; label: string; access: "PUBLIC" | "PRIVATE" }
+> = {
+  reception: { code: "01", label: "RECEPTION", access: "PUBLIC" },
+  hr: { code: "02", label: "HR", access: "PUBLIC" },
+  procurement: { code: "03", label: "PROCUREMENT", access: "PUBLIC" },
+  operations: { code: "04", label: "OPERATIONS", access: "PRIVATE" },
+  director: { code: "05", label: "DIRECTOR", access: "PRIVATE" },
+  projects: { code: "06", label: "PROJECTS", access: "PRIVATE" },
+  meeting: { code: "07", label: "MEETING", access: "PUBLIC" },
 };
+
+function RoomPlate({
+  department,
+  position,
+  rotation = 0,
+  unlocked,
+}: {
+  department: Department;
+  position: [number, number, number];
+  rotation?: number;
+  unlocked: boolean;
+}) {
+  const meta = ROOM_PLATES[department.id];
+  const restricted = meta.access === "PRIVATE";
+  const statusColor = restricted && !unlocked ? "#c96a5f" : "#9fb66a";
+
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      {/* recessed shadow layer */}
+      <mesh position={[0, 0, -0.018]} castShadow>
+        <boxGeometry args={[0.7, 0.31, 0.035]} />
+        <meshStandardMaterial color="#151715" roughness={0.72} />
+      </mesh>
+
+      {/* face */}
+      <mesh castShadow>
+        <boxGeometry args={[0.66, 0.27, 0.035]} />
+        <meshStandardMaterial color="#242724" roughness={0.64} />
+      </mesh>
+
+      {/* warm accent rail */}
+      <mesh position={[-0.305, 0, 0.022]}>
+        <boxGeometry args={[0.025, 0.21, 0.012]} />
+        <meshStandardMaterial color="#cbb38d" roughness={0.7} />
+      </mesh>
+
+      <Text
+        position={[-0.255, 0.067, 0.024]}
+        fontSize={0.038}
+        color="#aaa79e"
+        anchorX="left"
+        anchorY="middle"
+      >
+        {meta.code}
+      </Text>
+
+      <Text
+        position={[-0.255, 0.005, 0.024]}
+        fontSize={0.067}
+        color="#f5f2eb"
+        anchorX="left"
+        anchorY="middle"
+        maxWidth={0.45}
+      >
+        {meta.label}
+      </Text>
+
+      <Text
+        position={[-0.255, -0.078, 0.024]}
+        fontSize={0.03}
+        color="#a9aaa4"
+        anchorX="left"
+        anchorY="middle"
+      >
+        {meta.access}
+      </Text>
+
+      <mesh position={[0.265, -0.078, 0.026]}>
+        <circleGeometry args={[0.021, 14]} />
+        <meshStandardMaterial
+          color={statusColor}
+          emissive={statusColor}
+          emissiveIntensity={0.35}
+        />
+      </mesh>
+    </group>
+  );
+}
 
 function isWalkable(
   x: number,
@@ -838,28 +919,24 @@ function Room({
       )}
 
       {(isLeft || isRight) && (
-        <group
+        <RoomPlate
+          department={department}
+          unlocked={unlocked}
           position={[
-            innerWallX + (isLeft ? -0.07 : 0.07),
-            1.34,
-            -0.48,
+            innerWallX + (isLeft ? -0.075 : 0.075),
+            1.22,
+            -0.62,
           ]}
-          rotation={[0, doorRotation, 0]}
-        >
-          <mesh castShadow>
-            <boxGeometry args={[0.44, 0.18, 0.035]} />
-            <meshStandardMaterial color="#202320" roughness={0.7} />
-          </mesh>
-          <Text
-            position={[0, 0, 0.02]}
-            fontSize={0.072}
-            color="#f3f4ef"
-            anchorX="center"
-            anchorY="middle"
-          >
-            {ROOM_PLATES[department.id]}
-          </Text>
-        </group>
+          rotation={doorRotation}
+        />
+      )}
+
+      {isReception && (
+        <RoomPlate
+          department={department}
+          unlocked={true}
+          position={[1.62, 1.18, -d / 2 + 0.075]}
+        />
       )}
 
       <Desk
