@@ -25,6 +25,55 @@ function dispatchMove(key: string, pressed: boolean) {
   window.dispatchEvent(new KeyboardEvent(pressed ? "keydown" : "keyup", { key }));
 }
 
+type ProjectCase = {
+  title: string;
+  category: string;
+  challenge: string;
+  solution: string;
+  process: string[];
+  result: string;
+  services: string[];
+};
+
+const projectCases: ProjectCase[] = [
+  {
+    title: "Otimização de distribuição",
+    category: "Distribuição",
+    challenge: "Uma operação com múltiplos pontos de entrega precisa de reduzir atrasos, melhorar a visibilidade das rotas e organizar melhor cada passagem de responsabilidade.",
+    solution: "Estruturar um fluxo central de planeamento, acompanhamento e confirmação de entregas, com informação operacional reunida num único ponto.",
+    process: ["Mapeamento da operação", "Definição de rotas", "Pontos de controlo", "Acompanhamento", "Revisão de desempenho"],
+    result: "Caso demonstrativo de como o portfólio pode explicar claramente o problema, a intervenção e o resultado esperado de uma operação logística.",
+    services: ["Transporte rodoviário", "Planeamento de rotas", "Distribuição final"],
+  },
+  {
+    title: "Operação de carga regional",
+    category: "Transporte regional",
+    challenge: "Coordenar uma carga entre mercados diferentes exige documentação, controlo de prazos e comunicação consistente entre várias equipas.",
+    solution: "Criar uma operação coordenada com responsabilidades definidas, acompanhamento por etapas e visibilidade sobre o estado da carga.",
+    process: ["Preparação documental", "Coordenação de transporte", "Fronteira e trânsito", "Entrega", "Fecho da operação"],
+    result: "Caso demonstrativo para apresentar como uma operação regional pode ser contada de forma visual e compreensível dentro do The Office.",
+    services: ["Frete regional", "Coordenação operacional", "Desalfandegamento"],
+  },
+  {
+    title: "Solução de armazenagem",
+    category: "Armazém",
+    challenge: "Uma operação de armazenagem precisa de melhorar organização, localização de mercadoria e preparação de pedidos sem aumentar a complexidade para a equipa.",
+    solution: "Organizar zonas, fluxos de entrada e saída e pontos de controlo para tornar a movimentação de stock mais previsível.",
+    process: ["Receção", "Classificação", "Armazenagem", "Picking", "Expedição"],
+    result: "Caso demonstrativo focado em mostrar processos de armazém como uma sequência clara de decisões e movimentos.",
+    services: ["Armazenagem", "Gestão de stock", "Preparação de pedidos"],
+  },
+  {
+    title: "Projeto de procurement",
+    category: "Aquisições",
+    challenge: "Encontrar materiais adequados dentro de prazo exige fornecedores confiáveis, especificações claras e acompanhamento da compra até à entrega.",
+    solution: "Centralizar o pedido, comparar opções e acompanhar o fornecimento desde a necessidade inicial até à receção do material.",
+    process: ["Briefing", "Pesquisa de fornecedores", "Comparação", "Compra", "Entrega"],
+    result: "Caso demonstrativo de como o The Office pode apresentar procurement como um serviço completo e não apenas como uma lista de fornecedores.",
+    services: ["Sourcing", "Gestão de fornecedores", "Aquisições"],
+  },
+];
+
 const panelCopy: Record<
   Exclude<Panel, null | "cv" | "procurement" | "supplier">,
   { eyebrow: string; title: string; body: string; items?: string[] }
@@ -107,6 +156,7 @@ export default function OfficeExperience() {
   const [currentArea, setCurrentArea] = useState<Department | null>(null);
   const [visited, setVisited] = useState<Department["id"][]>([]);
   const [entering, setEntering] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<number | null>(null);
 
   const handleSelect = (department: Department) => {
     setSelected(department);
@@ -118,6 +168,11 @@ export default function OfficeExperience() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+
+      if (selectedProject !== null) {
+        setSelectedProject(null);
+        return;
+      }
 
       if (panel) {
         setPanel(null);
@@ -135,7 +190,7 @@ export default function OfficeExperience() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [panel, directoryOpen, selected]);
+  }, [panel, directoryOpen, selected, selectedProject]);
 
   const enterOffice = () => {
     if (entering) return;
@@ -177,6 +232,7 @@ export default function OfficeExperience() {
   const closePanel = () => {
     setPanel(null);
     setSubmitted(false);
+    setSelectedProject(null);
   };
 
   const infoPanel =
@@ -187,7 +243,7 @@ export default function OfficeExperience() {
   return (
     <main className="experience-shell">
       <header className="topbar">
-        <a className="brand" href="#" aria-label="The Office home">
+        <a className="brand" href="#" aria-label="Página inicial do The Office">
           THE OFFICE
         </a>
         <div className="topbar-meta">
@@ -196,7 +252,7 @@ export default function OfficeExperience() {
         </div>
       </header>
 
-      <section className="scene-shell" aria-label="Interactive 3D office">
+      <section className="scene-shell" aria-label="Escritório 3D interativo">
         <OfficeScene
           onSelect={handleSelect}
           onNearby={setNearby}
@@ -210,7 +266,7 @@ export default function OfficeExperience() {
         </div>
 
         {entered && (
-          <aside className="mini-map" aria-label="Office mini map">
+          <aside className="mini-map" aria-label="Mini-mapa do escritório">
             <div className="mini-map-head">
               <span>Mapa do escritório</span>
               <strong>{visited.length}/{departments.length}</strong>
@@ -249,7 +305,7 @@ export default function OfficeExperience() {
         </button>
 
         {directoryOpen && (
-          <nav className="directory-panel" aria-label="Office directory">
+          <nav className="directory-panel" aria-label="Diretório do escritório">
             <span className="eyebrow">Navegação rápida</span>
             {departments.map((department, index) => (
               <button
@@ -274,7 +330,7 @@ export default function OfficeExperience() {
           <span className="controls-separator">Aproxime-se de uma pessoa e pressione E</span>
         </div>
 
-        <div className="mobile-dpad" aria-label="Movement controls">
+        <div className="mobile-dpad" aria-label="Controlos de movimento">
           <button
             type="button"
             onPointerDown={() => dispatchMove("w", true)}
@@ -337,7 +393,7 @@ export default function OfficeExperience() {
               <span>
                 {selected.npcName} · {selected.npcRole}
               </span>
-              <button type="button" aria-label="Close conversation" onClick={() => setSelected(null)}>
+              <button type="button" aria-label="Fechar conversa" onClick={() => setSelected(null)}>
                 <span aria-hidden="true">×</span>
                 <small>ESC</small>
               </button>
@@ -368,26 +424,74 @@ export default function OfficeExperience() {
                     <span className="eyebrow">{infoPanel.eyebrow}</span>
                     <h2>{infoPanel.title}</h2>
                   </div>
-                  <button type="button" aria-label="Close panel" onClick={closePanel}>
+                  <button type="button" aria-label="Fechar painel" onClick={closePanel}>
                     ×
                   </button>
                 </div>
                 <div className="info-panel-body">
                   <p>{infoPanel.body}</p>
-                  {infoPanel.items && panel === "projects" ? (
+                  {panel === "projects" && selectedProject !== null ? (
+                    <article className="case-study">
+                      <button
+                        className="case-study-back"
+                        type="button"
+                        onClick={() => setSelectedProject(null)}
+                      >
+                        ← Voltar aos projetos
+                      </button>
+                      <div className="case-study-hero">
+                        <span>CASO 0{selectedProject + 1}</span>
+                        <small>{projectCases[selectedProject].category}</small>
+                        <h3>{projectCases[selectedProject].title}</h3>
+                      </div>
+                      <div className="case-study-section">
+                        <span>01 — Desafio</span>
+                        <p>{projectCases[selectedProject].challenge}</p>
+                      </div>
+                      <div className="case-study-section">
+                        <span>02 — Solução</span>
+                        <p>{projectCases[selectedProject].solution}</p>
+                      </div>
+                      <div className="case-study-section">
+                        <span>03 — Processo</span>
+                        <div className="case-process">
+                          {projectCases[selectedProject].process.map((step, index) => (
+                            <div key={step}>
+                              <small>{String(index + 1).padStart(2, "0")}</small>
+                              <strong>{step}</strong>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="case-study-section">
+                        <span>04 — Serviços envolvidos</span>
+                        <div className="case-tags">
+                          {projectCases[selectedProject].services.map((service) => (
+                            <span key={service}>{service}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="case-study-section">
+                        <span>05 — Resultado</span>
+                        <p>{projectCases[selectedProject].result}</p>
+                      </div>
+                    </article>
+                  ) : infoPanel.items && panel === "projects" ? (
                     <div className="project-grid">
-                      {infoPanel.items.map((item, index) => (
-                        <article key={item} className="project-card">
+                      {projectCases.map((project, index) => (
+                        <article key={project.title} className="project-card">
                           <span>0{index + 1}</span>
                           <div>
-                            <small>Projeto selecionado</small>
-                            <h3>{item.replace(/^Caso \d+ — /, "")}</h3>
+                            <small>{project.category}</small>
+                            <h3>{project.title}</h3>
                             <p>
-                              Caso demonstrativo do portfólio. Aqui poderemos apresentar o desafio,
-                              a solução, o processo e os resultados do projeto.
+                              Caso demonstrativo do portfólio com desafio, solução, processo e
+                              resultado apresentados dentro da experiência.
                             </p>
                           </div>
-                          <button type="button">Ver caso →</button>
+                          <button type="button" onClick={() => setSelectedProject(index)}>
+                            Ver caso →
+                          </button>
                         </article>
                       ))}
                     </div>
@@ -425,7 +529,7 @@ export default function OfficeExperience() {
                           : "Diga-nos do que precisa."}
                     </h2>
                   </div>
-                  <button type="button" aria-label="Close form" onClick={closePanel}>
+                  <button type="button" aria-label="Fechar formulário" onClick={closePanel}>
                     ×
                   </button>
                 </div>
