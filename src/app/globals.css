@@ -1318,3 +1318,158 @@ button {
     display: grid;
   }
 }
+
+.door-access-badge {
+  padding: 7px 9px;
+  border: 1px solid rgba(23,27,23,.34);
+  background: rgba(244,246,240,.95);
+  color: var(--ink);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 10px 30px rgba(23,27,23,.08);
+}
+
+.access-backdrop {
+  position: fixed;
+  z-index: 95;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15,17,15,.72);
+  backdrop-filter: blur(12px);
+}
+
+.access-panel {
+  width: min(520px, 100%);
+  padding: 24px;
+  background: #f1f2ed;
+  border: 1px solid rgba(255,255,255,.28);
+  box-shadow: 0 30px 120px rgba(0,0,0,.28);
+}
+
+.access-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.access-panel-head span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 9px;
+  letter-spacing: .12em;
+  opacity: .55;
+}
+
+.access-panel-head h2 {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 58px);
+  line-height: .92;
+  font-weight: 500;
+  letter-spacing: -.055em;
+}
+
+.access-panel-head button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.access-panel > p {
+  margin: 0 0 22px;
+  max-width: 440px;
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: .7;
+}
+
+.access-form {
+  border-top: 1px solid var(--line);
+}
+
+.access-form label {
+  padding: 14px 0;
+  display: grid;
+  gap: 7px;
+  border-bottom: 1px solid var(--line);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+}
+
+.access-form input {
+  width: 100%;
+  padding: 9px 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.access-form > button {
+  width: 100%;
+  margin-top: 16px;
+  padding: 15px 16px;
+  display: flex;
+  justify-content: space-between;
+  border: 1px solid var(--ink);
+  background: var(--acid);
+  cursor: pointer;
+}
+
+.access-form > button:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.access-error {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(150,35,35,.2);
+  background: rgba(150,35,35,.06);
+  color: #7d2525;
+  font-size: 11px;
+}
+
+.access-panel > small {
+  display: block;
+  margin-top: 14px;
+  font-size: 9px;
+  line-height: 1.45;
+  opacity: .5;
+}
+
+.mini-room.is-locked::after {
+  content: "🔒";
+  position: absolute;
+  right: 3px;
+  top: 2px;
+  font-size: 7px;
+}
+
+.directory-panel > button.is-locked::after {
+  content: "🔒";
+  font-size: 9px;
+  opacity: .65;
+}
+
+@media (max-width: 720px) {
+  .access-backdrop {
+    padding: 10px;
+  }
+
+  .access-panel {
+    padding: 20px;
+  }
+}
