@@ -5,6 +5,7 @@ import { Canvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Department, departments } from "./officeData";
+import HumanAvatar from "./HumanAvatar";
 
 type Props = {
   onSelect: (department: Department) => void;
@@ -266,13 +267,15 @@ function NPC({
   const [hovered, setHovered] = useState(false);
   const ref = useRef<THREE.Group>(null);
   const [x, , z] = department.npcPosition;
-  const idleOffset = department.id.length * 0.63;
+  const variante =
+    department.id === "reception" || department.id === "hr" || department.id === "projects"
+      ? "feminino"
+      : "masculino";
 
   useFrame(({ clock }) => {
     if (!ref.current) return;
-    const t = clock.elapsedTime + idleOffset;
-    ref.current.position.y = Math.sin(t * (active ? 2.1 : 1.25)) * 0.025;
-    ref.current.rotation.y = Math.sin(t * 0.7) * (active ? 0.06 : 0.025);
+    const t = clock.elapsedTime + department.id.length * 0.63;
+    ref.current.rotation.y = Math.sin(t * 0.65) * (active ? 0.04 : 0.018);
   });
 
   const click = (event: ThreeEvent<MouseEvent>) => {
@@ -288,29 +291,16 @@ function NPC({
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
     >
-      <mesh position={[0, 0.82, 0]} castShadow>
-        <capsuleGeometry args={[0.24, 0.72, 6, 12]} />
-        <meshStandardMaterial color={active || hovered ? "#d9ff65" : "#30342f"} roughness={0.8} />
-      </mesh>
-      <mesh position={[0, 1.58, 0]} castShadow>
-        <sphereGeometry args={[0.29, 18, 18]} />
-        <meshStandardMaterial color="#70472f" roughness={0.92} />
-      </mesh>
-      <mesh position={[-0.31, 0.9, 0]} rotation={[0, 0, -0.18]} castShadow>
-        <capsuleGeometry args={[0.075, 0.52, 4, 8]} />
-        <meshStandardMaterial color={active || hovered ? "#d9ff65" : "#30342f"} />
-      </mesh>
-      <mesh position={[0.31, 0.9, 0]} rotation={[0, 0, 0.18]} castShadow>
-        <capsuleGeometry args={[0.075, 0.52, 4, 8]} />
-        <meshStandardMaterial color={active || hovered ? "#d9ff65" : "#30342f"} />
-      </mesh>
-      {active && (
+      <HumanAvatar variante={variante} estado={active ? "falar" : "parado"} />
+
+      {(active || hovered) && (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
-          <torusGeometry args={[0.47, 0.025, 8, 32]} />
+          <torusGeometry args={[0.48, 0.025, 8, 32]} />
           <meshBasicMaterial color="#d9ff65" />
         </mesh>
       )}
-      <Html position={[0, 2.02, 0]} center distanceFactor={11}>
+
+      <Html position={[0, 2.08, 0]} center distanceFactor={11}>
         <div className={`npc-tag ${active ? "npc-tag--active" : ""}`}>
           <strong>{department.npcName}</strong>
           <span>{department.npcRole}</span>
@@ -535,6 +525,7 @@ function Player({
   const { camera } = useThree();
   const walkTime = useRef(0);
   const lookTarget = useRef(new THREE.Vector3(0, 0.5, 0));
+  const movingRef = useRef(false);
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
@@ -548,124 +539,10 @@ function Player({
 
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    return () => {
-      window.removeEventListener("keydown", down);
-      window.removeEventListener("keyup", up);
-    };
-  }, [onInteract]);
-
-  useFrame((_, delta) => {
-    if (!ref.current) return;
-
-    const speed = 3.65 * delta;
-    const p = ref.current.position;
-    const dx =
-      (keys.current.d || keys.current.arrowright ? 1 : 0) -
-      (keys.current.a || keys.current.arrowleft ? 1 : 0);
-    const dz =
-      (keys.current.s || keys.current.arrowdown ? 1 : 0) -
-      (keys.current.w || keys.current.arrowup ? 1 : 0);
-
-    if (!focusDepartment && (dx || dz)) {
-      const magnitude = Math.hypot(dx, dz) || 1;
-      const nextX = p.x + (dx / magnitude) * speed;
-      const nextZ = p.z + (dz / magnitude) * speed;
-
-      if (isWalkable(nextX, p.z)) p.x = nextX;
-      if (isWalkable(p.x, nextZ)) p.z = nextZ;
-
-      walkTime.current += delta * 9;
-      ref.current.rotation.y = Math.atan2(dx, dz);
-      ref.current.position.y = Math.abs(Math.sin(walkTime.current)) * 0.035;
-    } else {
-      ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, 0, 0.2);
-    }
-
-    p.x = THREE.MathUtils.clamp(p.x, -8.35, 8.35);
-    p.z = THREE.MathUtils.clamp(p.z, -15.2, 5.15);
-
-    let nearest: Department | null = null;
-    let nearestDistance = 1.72;
-
-    for (const department of departments) {
-      const [nx, , nz] = department.npcPosition;
-      const distance = Math.hypot(p.x - nx, p.z - nz);
-      if (distance < nearestDistance) {
-        nearest = department;
-        nearestDistance = distance;
-      }
-    }
-
-    nearbyRef.current = nearest;
-    const nextId = nearest?.id ?? null;
-    if (nextId !== lastNearbyId.current) {
-      lastNearbyId.current = nextId;
-      onNearby(nearest);
-    }
-
-    let area: Department | null = null;
-    for (const department of departments) {
-      const [cx, , cz] = department.position;
-      const [width, , depth] = department.size;
-      if (
-        Math.abs(p.x - cx) <= width / 2 - 0.15 &&
-        Math.abs(p.z - cz) <= depth / 2 - 0.15
-      ) {
-        area = department;
-        break;
-      }
-    }
-
-    const areaId = area?.id ?? null;
-    if (areaId !== lastAreaId.current) {
-      lastAreaId.current = areaId;
-      onAreaChange(area);
-    }
-
-    if (focusDepartment) {
-      const [nx, , nz] = focusDepartment.npcPosition;
-      const side = nx < 0 ? 1 : -1;
-      const cameraTarget = new THREE.Vector3(nx + side * 2.1, 2.7, nz + 3.1);
-      const target = new THREE.Vector3(nx, 1.25, nz);
-      camera.position.lerp(cameraTarget, 0.075);
-      lookTarget.current.lerp(target, 0.1);
-      camera.lookAt(lookTarget.current);
-    } else {
-      const cameraTarget = new THREE.Vector3(p.x + 5.4, 6.7, p.z + 7.2);
-      const target = new THREE.Vector3(p.x, 0.38, p.z - 2);
-      camera.position.lerp(cameraTarget, 0.06);
-      lookTarget.current.lerp(target, 0.12);
-      camera.lookAt(lookTarget.current);
-    }
-  });
-
-  return (
+    return (
     <group ref={ref} position={[0, 0, 4.35]}>
-      <mesh position={[0, 0.86, 0]} castShadow>
-        <capsuleGeometry args={[0.24, 0.76, 6, 12]} />
-        <meshStandardMaterial color="#171b17" />
-      </mesh>
-      <mesh position={[0, 1.66, 0]} castShadow>
-        <sphereGeometry args={[0.29, 18, 18]} />
-        <meshStandardMaterial color="#8b5638" />
-      </mesh>
-      <mesh position={[-0.3, 0.92, 0]} rotation={[0, 0, -0.15]}>
-        <capsuleGeometry args={[0.07, 0.52, 4, 8]} />
-        <meshStandardMaterial color="#171b17" />
-      </mesh>
-      <mesh position={[0.3, 0.92, 0]} rotation={[0, 0, 0.15]}>
-        <capsuleGeometry args={[0.07, 0.52, 4, 8]} />
-        <meshStandardMaterial color="#171b17" />
-      </mesh>
-      <mesh position={[-0.13, 0.28, 0]}>
-        <capsuleGeometry args={[0.075, 0.43, 4, 8]} />
-        <meshStandardMaterial color="#252824" />
-      </mesh>
-      <mesh position={[0.13, 0.28, 0]}>
-        <capsuleGeometry args={[0.075, 0.43, 4, 8]} />
-        <meshStandardMaterial color="#252824" />
-      </mesh>
-      <Html position={[0, 2.06, 0]} center distanceFactor={11}>
+      <HumanAvatar variante="masculino" estado={movingRef.current ? "andar" : "parado"} />
+      <Html position={[0, 2.08, 0]} center distanceFactor={11}>
         <div className="player-label">VOCÊ</div>
       </Html>
     </group>
