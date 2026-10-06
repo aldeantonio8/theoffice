@@ -1832,3 +1832,47 @@ button {
   font-size: 9px;
   color: rgba(255,255,255,.55);
 }
+
+.topbar-meta--minimal {
+  align-items: center;
+  gap: 10px;
+  font-size: 9px;
+}
+
+.topbar-meta--minimal strong {
+  font-size: 9px;
+  font-weight: 500;
+  opacity: .55;
+}
+
+.mini-map--drawer {
+  top: 132px;
+  right: auto;
+  left: 24px;
+}
+
+.directory-toggle {
+  min-width: 92px;
+}
+
+.talk-prompt {
+  padding: 7px 10px 7px 7px;
+  border-color: rgba(23,27,23,.35);
+  background: rgba(244,246,240,.9);
+  backdrop-filter: blur(10px);
+  font-size: 10px;
+}
+
+.talk-key {
+  width: 24px;
+  height: 24px;
+  font-size: 9px;
+}
+
+@media (max-width: 720px) {
+  .mini-map--drawer {
+    left: 14px;
+    right: auto;
+    top: 118px;
+  }
+}
