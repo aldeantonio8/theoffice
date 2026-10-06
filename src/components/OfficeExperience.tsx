@@ -161,6 +161,8 @@ export default function OfficeExperience() {
   const [restrictedDepartment, setRestrictedDepartment] = useState<Department | null>(null);
   const [accessError, setAccessError] = useState("");
   const [accessLoading, setAccessLoading] = useState(false);
+  const [accessGrantedDepartment, setAccessGrantedDepartment] =
+    useState<Department["id"] | null>(null);
   const [receptionCleared, setReceptionCleared] = useState(false);
   const [miaStep, setMiaStep] = useState<0 | 1 | 2>(0);
 
@@ -258,13 +260,18 @@ export default function OfficeExperience() {
         return;
       }
 
-      setUnlockedDepartments((current) =>
-        current.includes(department.id)
-          ? current
-          : [...current, department.id],
-      );
-      setRestrictedDepartment(null);
+      setAccessGrantedDepartment(department.id);
       setAccessError("");
+
+      window.setTimeout(() => {
+        setUnlockedDepartments((current) =>
+          current.includes(department.id)
+            ? current
+            : [...current, department.id],
+        );
+        setRestrictedDepartment(null);
+        setAccessGrantedDepartment(null);
+      }, 850);
     } catch {
       setAccessError("Erro de ligação. Tente novamente.");
     } finally {
@@ -337,6 +344,7 @@ export default function OfficeExperience() {
           restrictedDepartmentId={restrictedDepartment?.id ?? null}
           accessError={accessError}
           accessLoading={accessLoading}
+          accessGrantedDepartmentId={accessGrantedDepartment}
           onSubmitCredentials={submitDoorCredentials}
           onCloseAccess={() => {
             setRestrictedDepartment(null);
