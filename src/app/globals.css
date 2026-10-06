@@ -2116,3 +2116,156 @@ button {
     width: 94%;
   }
 }
+
+
+/* Speech bubbles attached to 3D characters */
+.world-speech {
+  position: relative;
+  min-width: 150px;
+  max-width: 230px;
+  padding: 10px 12px;
+  border-radius: 15px;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: normal;
+  box-shadow: 0 12px 28px rgba(23,27,23,.14);
+  pointer-events: none;
+}
+
+.world-speech--npc {
+  background: rgba(248,246,240,.97);
+  color: #171b17;
+  border: 1px solid rgba(23,27,23,.09);
+  border-bottom-left-radius: 5px;
+}
+
+.world-speech--npc::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  bottom: -7px;
+  width: 13px;
+  height: 13px;
+  background: rgba(248,246,240,.97);
+  border-right: 1px solid rgba(23,27,23,.07);
+  border-bottom: 1px solid rgba(23,27,23,.07);
+  transform: rotate(45deg);
+}
+
+.world-speech--player {
+  background: #171b17;
+  color: white;
+  border-bottom-right-radius: 5px;
+}
+
+.world-speech--player::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  bottom: -7px;
+  width: 13px;
+  height: 13px;
+  background: #171b17;
+  transform: rotate(45deg);
+}
+
+/* Only choices remain in the HUD */
+.dialogue-dock {
+  position: absolute;
+  z-index: 45;
+  left: 50%;
+  bottom: 24px;
+  width: min(470px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  display: grid;
+  gap: 7px;
+  pointer-events: auto;
+}
+
+.dialogue-dock-top {
+  width: max-content;
+  margin: 0 auto 2px;
+  padding: 6px 7px 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(23,27,23,.12);
+  border-radius: 999px;
+  background: rgba(248,246,240,.91);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 22px rgba(23,27,23,.06);
+}
+
+.dialogue-dock-top span {
+  font-size: 8px;
+  letter-spacing: .04em;
+  opacity: .65;
+}
+
+.dialogue-dock-top button {
+  width: 23px;
+  height: 23px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(23,27,23,.07);
+  cursor: pointer;
+}
+
+.dialogue-choices {
+  display: grid;
+  gap: 6px;
+}
+
+.dialogue-choice {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(23,27,23,.13);
+  border-radius: 12px;
+  background: rgba(248,246,240,.94);
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgba(23,27,23,.06);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  font-size: 10px;
+  text-align: left;
+  transition: transform .18s ease, border-color .18s ease;
+}
+
+.dialogue-choice:hover {
+  transform: translateY(-2px);
+  border-color: rgba(23,27,23,.35);
+}
+
+.dialogue-choice span {
+  opacity: .5;
+}
+
+.dialogue-choice--single {
+  width: min(240px, 100%);
+  margin: 0 auto;
+}
+
+.dialogue-choice--continue {
+  border-color: #171b17;
+  background: var(--acid);
+  font-weight: 560;
+}
+
+@media (max-width: 720px) {
+  .dialogue-dock {
+    bottom: 88px;
+  }
+
+  .world-speech {
+    min-width: 130px;
+    max-width: 190px;
+    font-size: 10px;
+  }
+}
