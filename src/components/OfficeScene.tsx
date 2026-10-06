@@ -24,6 +24,7 @@ function isWalkable(
   x: number,
   z: number,
   unlockedDepartments: Set<Department["id"]>,
+  receptionCleared: boolean,
 ) {
   const inRect = (
     px: number,
@@ -33,6 +34,9 @@ function isWalkable(
     width: number,
     depth: number,
   ) => Math.abs(px - cx) <= width / 2 && Math.abs(pz - cz) <= depth / 2;
+
+  // Até concluir a conversa com a Mia, a receção é a única zona navegável.
+  if (!receptionCleared && z < 0.58) return false;
 
   // Main circulation spine and entrance.
   if (inRect(x, z, 0, -5.1, 3.15, 20.6)) return true;
@@ -72,6 +76,174 @@ function isWalkable(
   }
 
   return false;
+}
+
+
+type MoveRequest = {
+  id: number;
+  point: THREE.Vector3;
+  interact?: Department;
+};
+
+const PATH_STEP = 0.38;
+const PATH_MIN_X = -8.35;
+const PATH_MAX_X = 8.35;
+const PATH_MIN_Z = -15.2;
+const PATH_MAX_Z = 5.15;
+
+function findPath(
+  start: THREE.Vector3,
+  destination: THREE.Vector3,
+  unlockedDepartments: Set<Department["id"]>,
+  receptionCleared: boolean,
+) {
+  const clampPoint = (point: THREE.Vector3) =>
+    new THREE.Vector3(
+      THREE.MathUtils.clamp(point.x, PATH_MIN_X, PATH_MAX_X),
+      0,
+      THREE.MathUtils.clamp(point.z, PATH_MIN_Z, PATH_MAX_Z),
+    );
+
+  const startPoint = clampPoint(start);
+  const endPoint = clampPoint(destination);
+
+  if (
+    !isWalkable(
+      endPoint.x,
+      endPoint.z,
+      unlockedDepartments,
+      receptionCleared,
+    )
+  ) {
+    return [] as THREE.Vector3[];
+  }
+
+  const toGrid = (value: number, min: number) =>
+    Math.round((value - min) / PATH_STEP);
+  const fromGrid = (value: number, min: number) => min + value * PATH_STEP;
+  const sx = toGrid(startPoint.x, PATH_MIN_X);
+  const sz = toGrid(startPoint.z, PATH_MIN_Z);
+  const ex = toGrid(endPoint.x, PATH_MIN_X);
+  const ez = toGrid(endPoint.z, PATH_MIN_Z);
+  const key = (x: number, z: number) => `${x},${z}`;
+  const parse = (value: string) => value.split(",").map(Number) as [number, number];
+  const startKey = key(sx, sz);
+  const endKey = key(ex, ez);
+
+  const open = new Set<string>([startKey]);
+  const cameFrom = new Map<string, string>();
+  const g = new Map<string, number>([[startKey, 0]]);
+  const f = new Map<string, number>([
+    [startKey, Math.hypot(ex - sx, ez - sz)],
+  ]);
+
+  const directions = [
+    [1, 0, 1],
+    [-1, 0, 1],
+    [0, 1, 1],
+    [0, -1, 1],
+    [1, 1, Math.SQRT2],
+    [1, -1, Math.SQRT2],
+    [-1, 1, Math.SQRT2],
+    [-1, -1, Math.SQRT2],
+  ] as const;
+
+  const gridWalkable = (gx: number, gz: number) => {
+    const x = fromGrid(gx, PATH_MIN_X);
+    const z = fromGrid(gz, PATH_MIN_Z);
+    return (
+      x >= PATH_MIN_X &&
+      x <= PATH_MAX_X &&
+      z >= PATH_MIN_Z &&
+      z <= PATH_MAX_Z &&
+      isWalkable(x, z, unlockedDepartments, receptionCleared)
+    );
+  };
+
+  let iterations = 0;
+
+  while (open.size && iterations < 4500) {
+    iterations += 1;
+    let current = "";
+    let currentScore = Infinity;
+
+    for (const candidate of open) {
+      const score = f.get(candidate) ?? Infinity;
+      if (score < currentScore) {
+        current = candidate;
+        currentScore = score;
+      }
+    }
+
+    if (!current) break;
+
+    if (current === endKey) {
+      const keys: string[] = [current];
+      while (cameFrom.has(keys[keys.length - 1])) {
+        keys.push(cameFrom.get(keys[keys.length - 1])!);
+      }
+      keys.reverse();
+
+      const points = keys.slice(1).map((nodeKey) => {
+        const [gx, gz] = parse(nodeKey);
+        return new THREE.Vector3(
+          fromGrid(gx, PATH_MIN_X),
+          0,
+          fromGrid(gz, PATH_MIN_Z),
+        );
+      });
+
+      if (
+        points.length === 0 ||
+        points[points.length - 1].distanceTo(endPoint) > 0.08
+      ) {
+        points.push(endPoint);
+      }
+
+      return points;
+    }
+
+    open.delete(current);
+    const [cx, cz] = parse(current);
+
+    for (const [dx, dz, cost] of directions) {
+      const nx = cx + dx;
+      const nz = cz + dz;
+
+      if (!gridWalkable(nx, nz)) continue;
+
+      // Impede cortar diagonalmente através dos cantos das paredes.
+      if (
+        dx !== 0 &&
+        dz !== 0 &&
+        (!gridWalkable(cx + dx, cz) || !gridWalkable(cx, cz + dz))
+      ) {
+        continue;
+      }
+
+      const neighbor = key(nx, nz);
+      const tentative = (g.get(current) ?? Infinity) + cost;
+
+      if (tentative < (g.get(neighbor) ?? Infinity)) {
+        cameFrom.set(neighbor, current);
+        g.set(neighbor, tentative);
+        f.set(neighbor, tentative + Math.hypot(ex - nx, ez - nz));
+        open.add(neighbor);
+      }
+    }
+  }
+
+  return [] as THREE.Vector3[];
+}
+
+function getApproachPoint(department: Department) {
+  const [x, , z] = department.npcPosition;
+
+  if (department.id === "reception") {
+    return new THREE.Vector3(x, 0, z + 1.05);
+  }
+
+  return new THREE.Vector3(x < 0 ? x + 1.05 : x - 1.05, 0, z);
 }
 
 function Wall({
@@ -268,11 +440,11 @@ function GlassDoor({
 function NPC({
   department,
   active,
-  onSelect,
+  onApproach,
 }: {
   department: Department;
   active: boolean;
-  onSelect: (department: Department) => void;
+  onApproach: (department: Department) => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const ref = useRef<THREE.Group>(null);
@@ -290,7 +462,7 @@ function NPC({
 
   const click = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
-    onSelect(department);
+    onApproach(department);
   };
 
   return (
@@ -432,16 +604,15 @@ function DepartmentProps({ department }: { department: Department }) {
 function Room({
   department,
   active,
-  onSelect,
   unlocked,
   onRestrictedAttempt,
-  receptionCleared,
+  onMove,
 }: {
   department: Department;
   active: boolean;
-  onSelect: (department: Department) => void;
   unlocked: boolean;
   onRestrictedAttempt: (department: Department) => void;
+  onMove: (point: THREE.Vector3) => void;
 }) {
   const [x, , z] = department.position;
   const [w, , d] = department.size;
@@ -463,7 +634,7 @@ function Room({
             onRestrictedAttempt(department);
             return;
           }
-          onSelect(department);
+          onMove(event.point.clone());
         }}
       >
         <planeGeometry args={[w, d]} />
@@ -551,6 +722,9 @@ function Player({
   focusDepartment,
   unlockedDepartments,
   receptionCleared,
+  moveRequest,
+  onMoveFinished,
+  onCancelMove,
 }: {
   onNearby: Props["onNearby"];
   onAreaChange: Props["onAreaChange"];
@@ -558,6 +732,9 @@ function Player({
   focusDepartment: Department | null;
   unlockedDepartments: Set<Department["id"]>;
   receptionCleared: boolean;
+  moveRequest: MoveRequest | null;
+  onMoveFinished: () => void;
+  onCancelMove: () => void;
 }) {
   const ref = useRef<THREE.Group>(null);
   const keys = useRef<Record<string, boolean>>({});
@@ -565,6 +742,8 @@ function Player({
   const lastNearbyId = useRef<string | null>(null);
   const lastAreaId = useRef<string | null>(null);
   const lastMoving = useRef(false);
+  const pathRef = useRef<THREE.Vector3[]>([]);
+  const pathIndexRef = useRef(0);
   const { camera } = useThree();
   const lookTarget = useRef(new THREE.Vector3(0, 0.5, 0));
   const [moving, setMoving] = useState(false);
@@ -573,6 +752,17 @@ function Player({
     const down = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
       keys.current[key] = true;
+
+      if (
+        ["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(
+          key,
+        )
+      ) {
+        pathRef.current = [];
+        pathIndexRef.current = 0;
+        onCancelMove();
+      }
+
       if (key === "e" && nearbyRef.current) onInteract(nearbyRef.current);
     };
 
@@ -587,12 +777,29 @@ function Player({
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
     };
-  }, [onInteract]);
+  }, [onCancelMove, onInteract]);
+
+  useEffect(() => {
+    if (!moveRequest || !ref.current || focusDepartment) return;
+
+    pathRef.current = findPath(
+      ref.current.position,
+      moveRequest.point,
+      unlockedDepartments,
+      receptionCleared,
+    );
+    pathIndexRef.current = 0;
+  }, [
+    moveRequest,
+    unlockedDepartments,
+    receptionCleared,
+    focusDepartment,
+  ]);
 
   useFrame((_, delta) => {
     if (!ref.current) return;
 
-    const speed = 3.65 * delta;
+    const speed = 3.45 * delta;
     const p = ref.current.position;
 
     const dx =
@@ -603,35 +810,103 @@ function Player({
       (keys.current.s || keys.current.arrowdown ? 1 : 0) -
       (keys.current.w || keys.current.arrowup ? 1 : 0);
 
-    const isMoving = !focusDepartment && Boolean(dx || dz);
+    const manualMoving = !focusDepartment && Boolean(dx || dz);
+    const hasPath =
+      !focusDepartment &&
+      !manualMoving &&
+      pathIndexRef.current < pathRef.current.length;
+
+    if (manualMoving) {
+      const magnitude = Math.hypot(dx, dz) || 1;
+      const moveX = dx / magnitude;
+      const moveZ = dz / magnitude;
+      const nextX = p.x + moveX * speed;
+      const nextZ = p.z + moveZ * speed;
+
+      if (
+        isWalkable(
+          nextX,
+          p.z,
+          unlockedDepartments,
+          receptionCleared,
+        )
+      ) {
+        p.x = nextX;
+      }
+
+      if (
+        isWalkable(
+          p.x,
+          nextZ,
+          unlockedDepartments,
+          receptionCleared,
+        )
+      ) {
+        p.z = nextZ;
+      }
+
+      const targetAngle = Math.atan2(moveX, moveZ);
+      const difference = Math.atan2(
+        Math.sin(targetAngle - ref.current.rotation.y),
+        Math.cos(targetAngle - ref.current.rotation.y),
+      );
+      ref.current.rotation.y += difference * 0.22;
+    } else if (hasPath) {
+      const waypoint = pathRef.current[pathIndexRef.current];
+      const direction = waypoint.clone().sub(p);
+      direction.y = 0;
+      const distance = direction.length();
+
+      if (distance < 0.1) {
+        pathIndexRef.current += 1;
+
+        if (pathIndexRef.current >= pathRef.current.length) {
+          pathRef.current = [];
+          pathIndexRef.current = 0;
+          const interaction = moveRequest?.interact;
+          onMoveFinished();
+          if (interaction) onInteract(interaction);
+        }
+      } else {
+        direction.normalize();
+        const distanceThisFrame = Math.min(speed, distance);
+        const nextX = p.x + direction.x * distanceThisFrame;
+        const nextZ = p.z + direction.z * distanceThisFrame;
+
+        if (
+          isWalkable(
+            nextX,
+            nextZ,
+            unlockedDepartments,
+            receptionCleared,
+          )
+        ) {
+          p.x = nextX;
+          p.z = nextZ;
+        } else {
+          pathRef.current = [];
+          pathIndexRef.current = 0;
+          onMoveFinished();
+        }
+
+        const targetAngle = Math.atan2(direction.x, direction.z);
+        const difference = Math.atan2(
+          Math.sin(targetAngle - ref.current.rotation.y),
+          Math.cos(targetAngle - ref.current.rotation.y),
+        );
+        ref.current.rotation.y += difference * 0.18;
+      }
+    }
+
+    const isMoving = manualMoving || hasPath;
 
     if (isMoving !== lastMoving.current) {
       lastMoving.current = isMoving;
       setMoving(isMoving);
     }
 
-    if (isMoving) {
-      const magnitude = Math.hypot(dx, dz) || 1;
-      const nextX = p.x + (dx / magnitude) * speed;
-      const nextZ = p.z + (dz / magnitude) * speed;
-
-      if (isWalkable(nextX, p.z, unlockedDepartments)) p.x = nextX;
-
-      const blockedByReception =
-        !receptionCleared && nextZ < 0.58;
-
-      if (
-        !blockedByReception &&
-        isWalkable(p.x, nextZ, unlockedDepartments)
-      ) {
-        p.z = nextZ;
-      }
-
-      ref.current.rotation.y = Math.atan2(dx, dz);
-    }
-
-    p.x = THREE.MathUtils.clamp(p.x, -8.35, 8.35);
-    p.z = THREE.MathUtils.clamp(p.z, -15.2, 5.15);
+    p.x = THREE.MathUtils.clamp(p.x, PATH_MIN_X, PATH_MAX_X);
+    p.z = THREE.MathUtils.clamp(p.z, PATH_MIN_Z, PATH_MAX_Z);
 
     let nearest: Department | null = null;
     let nearestDistance = 1.72;
@@ -738,6 +1013,31 @@ function World({
   receptionCleared: boolean;
 }) {
   const grid = useMemo(() => new THREE.GridHelper(28, 28, "#8b8e86", "#c4c7bf"), []);
+  const [moveRequest, setMoveRequest] = useState<MoveRequest | null>(null);
+  const moveSequence = useRef(0);
+
+  const requestMove = (point: THREE.Vector3, interact?: Department) => {
+    moveSequence.current += 1;
+    setMoveRequest({
+      id: moveSequence.current,
+      point: new THREE.Vector3(point.x, 0, point.z),
+      interact,
+    });
+  };
+
+  const approachDepartment = (department: Department) => {
+    if (!receptionCleared && department.id !== "reception") return;
+
+    if (
+      department.requiresCredentials &&
+      !unlockedDepartments.has(department.id)
+    ) {
+      onRestrictedAttempt(department);
+      return;
+    }
+
+    requestMove(getApproachPoint(department), department);
+  };
 
   return (
     <>
@@ -752,18 +1052,41 @@ function World({
       />
       <CeilingLights />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, -5.25]} receiveShadow>
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, -0.04, -5.25]}
+        receiveShadow
+        onClick={(event) => {
+          event.stopPropagation();
+          requestMove(event.point.clone());
+        }}
+      >
         <planeGeometry args={[19, 22]} />
         <meshStandardMaterial color="#c9cbc3" roughness={1} />
       </mesh>
       <primitive object={grid} position={[0, 0.005, -5.25]} />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, -7.35]} receiveShadow>
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, 0.015, -7.35]}
+        receiveShadow
+        onClick={(event) => {
+          event.stopPropagation();
+          requestMove(event.point.clone());
+        }}
+      >
         <planeGeometry args={[3.3, 16.3]} />
         <meshStandardMaterial color="#e9e8e0" roughness={1} />
       </mesh>
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 4.55]}>
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, 0.02, 4.55]}
+        onClick={(event) => {
+          event.stopPropagation();
+          requestMove(event.point.clone());
+        }}
+      >
         <planeGeometry args={[3.5, 1.4]} />
         <meshStandardMaterial color="#d9ff65" />
       </mesh>
@@ -806,11 +1129,11 @@ function World({
           key={department.id}
           department={department}
           active={selected?.id === department.id || nearby?.id === department.id}
-          onSelect={onSelect}
           unlocked={
             !department.requiresCredentials || unlockedDepartments.has(department.id)
           }
           onRestrictedAttempt={onRestrictedAttempt}
+          onMove={(point) => requestMove(point)}
         />
       ))}
 
@@ -819,9 +1142,19 @@ function World({
           key={department.id}
           department={department}
           active={nearby?.id === department.id}
-          onSelect={onSelect}
+          onApproach={approachDepartment}
         />
       ))}
+
+      {moveRequest && (
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[moveRequest.point.x, 0.035, moveRequest.point.z]}
+        >
+          <ringGeometry args={[0.16, 0.24, 28]} />
+          <meshBasicMaterial color="#171b17" transparent opacity={0.5} />
+        </mesh>
+      )}
 
       <Player
         onNearby={onNearby}
@@ -830,6 +1163,9 @@ function World({
         focusDepartment={selected}
         unlockedDepartments={unlockedDepartments}
         receptionCleared={receptionCleared}
+        moveRequest={moveRequest}
+        onMoveFinished={() => setMoveRequest(null)}
+        onCancelMove={() => setMoveRequest(null)}
       />
     </>
   );
