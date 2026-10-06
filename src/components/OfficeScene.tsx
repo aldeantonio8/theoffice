@@ -14,6 +14,15 @@ type Props = {
   activeDepartmentId: Department["id"] | null;
   unlockedDepartments: Department["id"][];
   onRestrictedAttempt: (department: Department) => void;
+  restrictedDepartmentId: Department["id"] | null;
+  accessError: string;
+  accessLoading: boolean;
+  onSubmitCredentials: (
+    department: Department,
+    email: string,
+    password: string,
+  ) => void;
+  onCloseAccess: () => void;
   receptionCleared: boolean;
 };
 
@@ -607,12 +616,22 @@ function Room({
   unlocked,
   onRestrictedAttempt,
   onMove,
+  accessActive,
+  accessError,
+  accessLoading,
+  onSubmitCredentials,
+  onCloseAccess,
 }: {
   department: Department;
   active: boolean;
   unlocked: boolean;
   onRestrictedAttempt: (department: Department) => void;
   onMove: (point: THREE.Vector3) => void;
+  accessActive: boolean;
+  accessError: string;
+  accessLoading: boolean;
+  onSubmitCredentials: Props["onSubmitCredentials"];
+  onCloseAccess: Props["onCloseAccess"];
 }) {
   const [x, , z] = department.position;
   const [w, , d] = department.size;
@@ -692,22 +711,107 @@ function Room({
       />
 
       {department.requiresCredentials && !unlocked && (
-        <Html
-          position={[innerWallX + (isLeft ? 0.18 : -0.18), 1.35, 0.35]}
-          center
-          distanceFactor={10}
-        >
-          <button
-            className="door-access-badge"
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onRestrictedAttempt(department);
-            }}
+        <>
+          <mesh
+            position={[
+              innerWallX + (isLeft ? 0.08 : -0.08),
+              1.0,
+              0.35,
+            ]}
+            castShadow
           >
-            🔒 ACESSO RESTRITO
-          </button>
-        </Html>
+            <boxGeometry args={[0.08, 0.62, 0.46]} />
+            <meshStandardMaterial color="#171b17" />
+          </mesh>
+
+          <Html
+            position={[
+              innerWallX + (isLeft ? 0.28 : -0.28),
+              accessActive ? 1.55 : 1.3,
+              0.35,
+            ]}
+            center
+            distanceFactor={accessActive ? 7 : 10}
+          >
+            {accessActive ? (
+              <form
+                className="door-terminal"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const form = new FormData(event.currentTarget);
+                  onSubmitCredentials(
+                    department,
+                    String(form.get("accessEmail") || "").trim(),
+                    String(form.get("accessPassword") || ""),
+                  );
+                }}
+              >
+                <div className="door-terminal-head">
+                  <div>
+                    <span>ACESSO RESTRITO</span>
+                    <strong>{department.label}</strong>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Fechar terminal"
+                    onClick={onCloseAccess}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <p>Introduza as suas credenciais para abrir esta porta.</p>
+
+                <label>
+                  Email
+                  <input
+                    name="accessEmail"
+                    type="email"
+                    placeholder="email@empresa.com"
+                    autoComplete="username"
+                    required
+                    autoFocus
+                  />
+                </label>
+
+                <label>
+                  Password
+                  <input
+                    name="accessPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    required
+                  />
+                </label>
+
+                {accessError && (
+                  <div className="door-terminal-error">{accessError}</div>
+                )}
+
+                <button
+                  className="door-terminal-submit"
+                  type="submit"
+                  disabled={accessLoading}
+                >
+                  {accessLoading ? "A validar..." : "Abrir porta"}
+                  <span>→</span>
+                </button>
+              </form>
+            ) : (
+              <button
+                className="door-access-badge"
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onRestrictedAttempt(department);
+                }}
+              >
+                🔒 ACESSO RESTRITO
+              </button>
+            )}
+          </Html>
+        </>
       )}
 
       <DepartmentProps department={department} />
@@ -1005,6 +1109,11 @@ function World({
   onAreaChange,
   unlockedDepartments,
   onRestrictedAttempt,
+  restrictedDepartmentId,
+  accessError,
+  accessLoading,
+  onSubmitCredentials,
+  onCloseAccess,
   receptionCleared,
 }: {
   selected: Department | null;
@@ -1014,6 +1123,11 @@ function World({
   onAreaChange: Props["onAreaChange"];
   unlockedDepartments: Set<Department["id"]>;
   onRestrictedAttempt: Props["onRestrictedAttempt"];
+  restrictedDepartmentId: Department["id"] | null;
+  accessError: string;
+  accessLoading: boolean;
+  onSubmitCredentials: Props["onSubmitCredentials"];
+  onCloseAccess: Props["onCloseAccess"];
   receptionCleared: boolean;
 }) {
   const grid = useMemo(() => new THREE.GridHelper(28, 28, "#8b8e86", "#c4c7bf"), []);
@@ -1138,6 +1252,11 @@ function World({
           }
           onRestrictedAttempt={onRestrictedAttempt}
           onMove={(point) => requestMove(point)}
+          accessActive={restrictedDepartmentId === department.id}
+          accessError={accessError}
+          accessLoading={accessLoading}
+          onSubmitCredentials={onSubmitCredentials}
+          onCloseAccess={onCloseAccess}
         />
       ))}
 
@@ -1182,6 +1301,11 @@ export default function OfficeScene({
   activeDepartmentId,
   unlockedDepartments,
   onRestrictedAttempt,
+  restrictedDepartmentId,
+  accessError,
+  accessLoading,
+  onSubmitCredentials,
+  onCloseAccess,
   receptionCleared,
 }: Props) {
   const [selected, setSelected] = useState<Department | null>(null);
@@ -1219,6 +1343,11 @@ export default function OfficeScene({
         onAreaChange={onAreaChange}
         unlockedDepartments={unlockedSet}
         onRestrictedAttempt={onRestrictedAttempt}
+        restrictedDepartmentId={restrictedDepartmentId}
+        accessError={accessError}
+        accessLoading={accessLoading}
+        onSubmitCredentials={onSubmitCredentials}
+        onCloseAccess={onCloseAccess}
         receptionCleared={receptionCleared}
       />
     </Canvas>
