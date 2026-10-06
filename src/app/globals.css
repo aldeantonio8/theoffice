@@ -271,6 +271,34 @@ button {
   display: none;
 }
 
+
+.area-indicator {
+  position: absolute;
+  z-index: 16;
+  top: 86px;
+  right: 24px;
+  min-width: 180px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 2px;
+  border: 1px solid var(--line);
+  background: rgba(244, 246, 240, 0.88);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+}
+
+.area-indicator span {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+}
+
+.area-indicator strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .directory-toggle {
   position: absolute;
   z-index: 18;
@@ -599,6 +627,12 @@ button {
   .directory-toggle {
     top: 72px;
     left: 14px;
+  }
+
+  .area-indicator {
+    top: 72px;
+    right: 14px;
+    min-width: 150px;
   }
 
   .directory-panel {
