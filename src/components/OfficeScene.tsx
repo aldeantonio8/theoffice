@@ -27,8 +27,25 @@ type Props = {
   receptionCleared: boolean;
 };
 
-const WALL_HEIGHT = 1.62;
+const WALL_HEIGHT = 1.38;
 const WALL_THICKNESS = 0.13;
+
+const NPC_DEPARTMENT_IDS = new Set<Department["id"]>([
+  "reception",
+  "operations",
+  "director",
+  "projects",
+]);
+
+const ROOM_PLATES: Record<Department["id"], string> = {
+  reception: "RECEPTION",
+  hr: "HR",
+  procurement: "PROCUREMENT",
+  operations: "OPS",
+  director: "DIRECTOR",
+  projects: "PROJECTS",
+  meeting: "MEETING",
+};
 
 function isWalkable(
   x: number,
@@ -613,14 +630,6 @@ function DepartmentProps({ department }: { department: Department }) {
       <>
         <Sofa position={[-1.45, 0, 1.05]} />
         <Plant position={[1.9, 0, 1.05]} />
-        <Text
-          position={[0, 1.15, -1.7]}
-          fontSize={0.34}
-          color="#171b17"
-          anchorX="center"
-        >
-          THE OFFICE
-        </Text>
       </>
     );
   }
@@ -772,16 +781,22 @@ function Room({
         />
       </mesh>
 
-      <Wall position={[0, WALL_HEIGHT / 2, -d / 2]} size={[w, WALL_HEIGHT, WALL_THICKNESS]} />
-      {!isReception && (
-        <Wall position={[0, WALL_HEIGHT / 2, d / 2]} size={[w, WALL_HEIGHT, WALL_THICKNESS]} />
-      )}
+      <Wall
+        position={[0, WALL_HEIGHT / 2, -d / 2]}
+        size={[w, WALL_HEIGHT, WALL_THICKNESS]}
+      />
 
-      {!isLeft && (
-        <Wall position={[-w / 2, WALL_HEIGHT / 2, 0]} size={[WALL_THICKNESS, WALL_HEIGHT, d]} />
+      {isLeft && (
+        <Wall
+          position={[-w / 2, WALL_HEIGHT / 2, 0]}
+          size={[WALL_THICKNESS, WALL_HEIGHT, d]}
+        />
       )}
-      {!isRight && (
-        <Wall position={[w / 2, WALL_HEIGHT / 2, 0]} size={[WALL_THICKNESS, WALL_HEIGHT, d]} />
+      {isRight && (
+        <Wall
+          position={[w / 2, WALL_HEIGHT / 2, 0]}
+          size={[WALL_THICKNESS, WALL_HEIGHT, d]}
+        />
       )}
 
       {(isLeft || isRight) && (
@@ -797,22 +812,36 @@ function Room({
           <GlassDoor
             position={[innerWallX + (isLeft ? -0.04 : 0.04), 0, 0.35]}
             rotation={doorRotation}
-            open={department.requiresCredentials ? unlocked : active}
+            open={unlocked && doorNearby}
             restricted={Boolean(department.requiresCredentials)}
           />
         </>
       )}
 
-      <Text
-        position={[0, WALL_HEIGHT + 0.17, -d / 2 + 0.06]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        fontSize={0.24}
-        color="#171b17"
-        anchorX="center"
-        anchorY="middle"
-      >
-        {department.label.toUpperCase()}
-      </Text>
+      {(isLeft || isRight) && (
+        <group
+          position={[
+            innerWallX + (isLeft ? -0.07 : 0.07),
+            1.34,
+            -0.48,
+          ]}
+          rotation={[0, doorRotation, 0]}
+        >
+          <mesh castShadow>
+            <boxGeometry args={[0.44, 0.18, 0.035]} />
+            <meshStandardMaterial color="#202320" roughness={0.7} />
+          </mesh>
+          <Text
+            position={[0, 0, 0.02]}
+            fontSize={0.072}
+            color="#f3f4ef"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {ROOM_PLATES[department.id]}
+          </Text>
+        </group>
+      )}
 
       <Desk
         position={[
@@ -955,6 +984,7 @@ function Player({
   moveRequest,
   onMoveFinished,
   onCancelMove,
+  onDoorNearby,
   onLockedDoorNearby,
   onRequestAccess,
 }: {
@@ -967,6 +997,7 @@ function Player({
   moveRequest: MoveRequest | null;
   onMoveFinished: () => void;
   onCancelMove: () => void;
+  onDoorNearby: (department: Department | null) => void;
   onLockedDoorNearby: (department: Department | null) => void;
   onRequestAccess: (department: Department) => void;
 }) {
@@ -975,6 +1006,7 @@ function Player({
   const nearbyRef = useRef<Department | null>(null);
   const lastNearbyId = useRef<string | null>(null);
   const lastAreaId = useRef<string | null>(null);
+  const lastDoorId = useRef<string | null>(null);
   const lastLockedDoorId = useRef<string | null>(null);
   const lockedDoorRef = useRef<Department | null>(null);
   const lastMoving = useRef(false);
@@ -1163,25 +1195,32 @@ function Player({
     p.x = THREE.MathUtils.clamp(p.x, PATH_MIN_X, PATH_MAX_X);
     p.z = THREE.MathUtils.clamp(p.z, PATH_MIN_Z, PATH_MAX_Z);
 
-    let lockedDoor: Department | null = null;
-    let lockedDoorDistance = 1.2;
+    let nearestDoor: Department | null = null;
+    let nearestDoorDistance = 1.25;
 
     for (const department of departments) {
-      if (
-        !department.requiresCredentials ||
-        unlockedDepartments.has(department.id)
-      ) {
-        continue;
-      }
+      if (department.id === "reception") continue;
 
       const door = getDoorWorldPosition(department);
       const distance = Math.hypot(p.x - door.x, p.z - door.z);
 
-      if (distance < lockedDoorDistance) {
-        lockedDoor = department;
-        lockedDoorDistance = distance;
+      if (distance < nearestDoorDistance) {
+        nearestDoor = department;
+        nearestDoorDistance = distance;
       }
     }
+
+    const doorId = nearestDoor?.id ?? null;
+    if (doorId !== lastDoorId.current) {
+      lastDoorId.current = doorId;
+      onDoorNearby(nearestDoor);
+    }
+
+    const lockedDoor =
+      nearestDoor?.requiresCredentials &&
+      !unlockedDepartments.has(nearestDoor.id)
+        ? nearestDoor
+        : null;
 
     lockedDoorRef.current = lockedDoor;
     const lockedDoorId = lockedDoor?.id ?? null;
@@ -1195,6 +1234,7 @@ function Player({
     let nearestDistance = 1.72;
 
     for (const department of departments) {
+      if (!NPC_DEPARTMENT_IDS.has(department.id)) continue;
       const [nx, , nz] = department.npcPosition;
       const distance = Math.hypot(p.x - nx, p.z - nz);
 
@@ -1234,23 +1274,16 @@ function Player({
       onAreaChange(area);
     }
 
-    if (focusDepartment) {
-      const [nx, , nz] = focusDepartment.npcPosition;
-      const side = nx < 0 ? 1 : -1;
-      const cameraTarget = new THREE.Vector3(nx + side * 2.1, 2.7, nz + 3.1);
-      const target = new THREE.Vector3(nx, 1.25, nz);
+    const cameraTarget = new THREE.Vector3(
+      p.x + 7.4,
+      8.6,
+      p.z + 7.4,
+    );
+    const target = new THREE.Vector3(p.x, 0.55, p.z);
 
-      camera.position.lerp(cameraTarget, 0.075);
-      lookTarget.current.lerp(target, 0.1);
-      camera.lookAt(lookTarget.current);
-    } else {
-      const cameraTarget = new THREE.Vector3(p.x + 5.4, 6.7, p.z + 7.2);
-      const target = new THREE.Vector3(p.x, 0.38, p.z - 2);
-
-      camera.position.lerp(cameraTarget, 0.06);
-      lookTarget.current.lerp(target, 0.12);
-      camera.lookAt(lookTarget.current);
-    }
+    camera.position.lerp(cameraTarget, 0.055);
+    lookTarget.current.lerp(target, 0.1);
+    camera.lookAt(lookTarget.current);
   });
 
   return (
@@ -1307,8 +1340,8 @@ function World({
   onCloseAccess: Props["onCloseAccess"];
   receptionCleared: boolean;
 }) {
-  const grid = useMemo(() => new THREE.GridHelper(28, 28, "#8b8e86", "#c4c7bf"), []);
   const [moveRequest, setMoveRequest] = useState<MoveRequest | null>(null);
+  const [nearDoor, setNearDoor] = useState<Department | null>(null);
   const [nearLockedDoor, setNearLockedDoor] = useState<Department | null>(null);
   const moveSequence = useRef(0);
 
@@ -1370,7 +1403,6 @@ function World({
         <planeGeometry args={[19, 22]} />
         <meshStandardMaterial color="#bfc0b9" roughness={0.88} metalness={0.03} />
       </mesh>
-      <primitive object={grid} position={[0, 0.005, -5.25]} />
 
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
@@ -1385,28 +1417,26 @@ function World({
         <meshStandardMaterial color="#d9d7cf" roughness={0.7} metalness={0.02} />
       </mesh>
 
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, 0.02, 4.55]}
-        onClick={(event) => {
-          event.stopPropagation();
-          requestMove(event.point.clone());
-        }}
-      >
-        <planeGeometry args={[3.5, 1.4]} />
-        <meshStandardMaterial color="#d9ff65" />
-      </mesh>
       <Text
-        position={[0, 0.035, 4.55]}
+        position={[0, 0.028, 4.45]}
         rotation={[-Math.PI / 2, 0, 0]}
-        fontSize={0.24}
-        color="#171b17"
+        fontSize={0.12}
+        color="#4c504b"
+        anchorX="center"
       >
-        ENTRE NO ESCRITÓRIO
+        ENTER →
       </Text>
 
-      <Wall position={[-9.05, 0.8, -5.15]} size={[0.12, 1.6, 21.5]} color="#d7d5ce" />
-      <Wall position={[9.05, 0.8, -5.15]} size={[0.12, 1.6, 21.5]} color="#d7d5ce" />
+      <Wall
+        position={[-9.05, WALL_HEIGHT / 2, -5.15]}
+        size={[WALL_THICKNESS, WALL_HEIGHT, 21.5]}
+        color="#d7d5ce"
+      />
+      <Wall
+        position={[9.05, WALL_HEIGHT / 2, -5.15]}
+        size={[WALL_THICKNESS, WALL_HEIGHT, 21.5]}
+        color="#d7d5ce"
+      />
 
       <group position={[0, 0, 0.56]}>
         <mesh position={[-1.2, 0.55, 0]} castShadow>
@@ -1446,11 +1476,13 @@ function World({
           accessGranted={accessGrantedDepartmentId === department.id}
           onSubmitCredentials={onSubmitCredentials}
           onCloseAccess={onCloseAccess}
-          doorNearby={nearLockedDoor?.id === department.id}
+          doorNearby={nearDoor?.id === department.id}
         />
       ))}
 
-      {departments.map((department) => (
+      {departments
+        .filter((department) => NPC_DEPARTMENT_IDS.has(department.id))
+        .map((department) => (
         <NPC
           key={department.id}
           department={department}
@@ -1491,6 +1523,7 @@ function World({
         moveRequest={moveRequest}
         onMoveFinished={() => setMoveRequest(null)}
         onCancelMove={() => setMoveRequest(null)}
+        onDoorNearby={setNearDoor}
         onLockedDoorNearby={setNearLockedDoor}
         onRequestAccess={onRestrictedAttempt}
       />
@@ -1539,7 +1572,12 @@ export default function OfficeScene({
   };
 
   return (
-    <Canvas shadows dpr={[1, 1.25]} camera={{ position: [6.5, 8.5, 12], fov: 42 }}>
+    <Canvas
+      orthographic
+      shadows
+      dpr={[1, 1.15]}
+      camera={{ position: [7.4, 8.6, 11.75], zoom: 58, near: 0.1, far: 80 }}
+    >
       <World
         selected={selected}
         nearby={nearby}
