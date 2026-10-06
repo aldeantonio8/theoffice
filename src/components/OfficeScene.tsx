@@ -726,6 +726,7 @@ function World({
   onAreaChange,
   unlockedDepartments,
   onRestrictedAttempt,
+  receptionCleared,
 }: {
   selected: Department | null;
   nearby: Department | null;
