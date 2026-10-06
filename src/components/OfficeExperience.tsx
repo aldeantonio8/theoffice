@@ -165,6 +165,7 @@ export default function OfficeExperience() {
     useState<Department["id"] | null>(null);
   const [receptionCleared, setReceptionCleared] = useState(false);
   const [minaStep, setMinaStep] = useState<0 | 1 | 2>(0);
+  const [minaReply, setMinaReply] = useState("");
 
   const requestRestrictedAccess = (department: Department) => {
     setAccessError("");
@@ -184,7 +185,10 @@ export default function OfficeExperience() {
     }
 
     setSelected(department);
-    if (department.id === "reception") setMinaStep(0);
+    if (department.id === "reception") {
+      setMinaStep(0);
+      setMinaReply("");
+    }
     setVisited((current) =>
       current.includes(department.id) ? current : [...current, department.id],
     );
@@ -351,6 +355,8 @@ export default function OfficeExperience() {
             setAccessError("");
           }}
           receptionCleared={receptionCleared}
+          receptionDialogueStep={minaStep}
+          receptionPlayerReply={minaReply}
         />
 
         {entered && receptionCleared && directoryOpen && (
@@ -444,81 +450,70 @@ export default function OfficeExperience() {
         )}
 
         {selected?.id === "reception" && !receptionCleared ? (
-          <aside className="mia-chat">
-            <div className="mia-chat-head">
-              <div>
-                <strong>Mina</strong>
-                <span>Receção</span>
-              </div>
-              <button type="button" onClick={() => setSelected(null)} aria-label="Fechar conversa">
+          <aside className="dialogue-dock">
+            <div className="dialogue-dock-top">
+              <span>Mina · Receção</span>
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                aria-label="Fechar conversa"
+              >
                 ×
               </button>
             </div>
 
-            <div className="mia-chat-body">
-              <div className="chat-message chat-message--mia">
-                <span>Mina</span>
-                <p>Olá 👋 Bem-vindo ao The Office.</p>
+            {minaStep === 0 && (
+              <button
+                className="dialogue-choice dialogue-choice--single"
+                type="button"
+                onClick={() => setMinaStep(1)}
+              >
+                Olá, Mina.
+                <span>→</span>
+              </button>
+            )}
+
+            {minaStep === 1 && (
+              <div className="dialogue-choices">
+                {[
+                  "Quero conhecer a empresa.",
+                  "Vim conhecer os serviços.",
+                  "Estou à procura de oportunidades.",
+                ].map((reply) => (
+                  <button
+                    className="dialogue-choice"
+                    key={reply}
+                    type="button"
+                    onClick={() => {
+                      setMinaReply(reply);
+                      setMinaStep(2);
+                    }}
+                  >
+                    {reply}
+                    <span>→</span>
+                  </button>
+                ))}
               </div>
+            )}
 
-              {minaStep >= 1 && (
-                <div className="chat-message chat-message--mia">
-                  <span>Mina</span>
-                  <p>Antes de continuar, diga-me: o que o trouxe até aqui hoje?</p>
-                </div>
-              )}
-
-              {minaStep === 2 && (
-                <>
-                  <div className="chat-message chat-message--visitor">
-                    <span>Você</span>
-                    <p>Quero conhecer melhor a empresa e explorar o escritório.</p>
-                  </div>
-                  <div className="chat-message chat-message--mia">
-                    <span>Mina</span>
-                    <p>Perfeito. Pode avançar. Algumas áreas são restritas e podem pedir credenciais.</p>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="mia-chat-actions">
-              {minaStep === 0 && (
-                <button type="button" onClick={() => setMinaStep(1)}>
-                  Olá, Mina. <span>→</span>
-                </button>
-              )}
-
-              {minaStep === 1 && (
-                <>
-                  <button type="button" onClick={() => setMinaStep(2)}>
-                    Quero conhecer a empresa <span>→</span>
-                  </button>
-                  <button type="button" onClick={() => setMinaStep(2)}>
-                    Vim conhecer os serviços <span>→</span>
-                  </button>
-                  <button type="button" onClick={() => setMinaStep(2)}>
-                    Estou à procura de oportunidades <span>→</span>
-                  </button>
-                </>
-              )}
-
-              {minaStep === 2 && (
-                <button
-                  className="mia-chat-continue"
-                  type="button"
-                  onClick={() => {
-                    setReceptionCleared(true);
-                    setSelected(null);
-                    setVisited((current) =>
-                      current.includes("reception") ? current : ["reception", ...current],
-                    );
-                  }}
-                >
-                  Continuar para o escritório <span>→</span>
-                </button>
-              )}
-            </div>
+            {minaStep === 2 && (
+              <button
+                className="dialogue-choice dialogue-choice--continue"
+                type="button"
+                onClick={() => {
+                  setReceptionCleared(true);
+                  setSelected(null);
+                  setVisited((current) =>
+                    current.includes("reception")
+                      ? current
+                      : ["reception", ...current],
+                  );
+                }}
+              >
+                Continuar para o escritório
+                <span>→</span>
+              </button>
+            )}
           </aside>
         ) : selected ? (
           <aside className="department-card">
