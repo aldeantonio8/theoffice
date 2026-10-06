@@ -17,6 +17,7 @@ type Props = {
   restrictedDepartmentId: Department["id"] | null;
   accessError: string;
   accessLoading: boolean;
+  accessGrantedDepartmentId: Department["id"] | null;
   onSubmitCredentials: (
     department: Department,
     email: string,
@@ -633,6 +634,7 @@ function Room({
   accessActive,
   accessError,
   accessLoading,
+  accessGranted,
   onSubmitCredentials,
   onCloseAccess,
   doorNearby,
@@ -645,6 +647,7 @@ function Room({
   accessActive: boolean;
   accessError: string;
   accessLoading: boolean;
+  accessGranted: boolean;
   onSubmitCredentials: Props["onSubmitCredentials"];
   onCloseAccess: Props["onCloseAccess"];
   doorNearby: boolean;
@@ -750,70 +753,93 @@ function Room({
             distanceFactor={accessActive ? 7 : 10}
           >
             {accessActive ? (
-              <form
-                className="door-terminal"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  const form = new FormData(event.currentTarget);
-                  onSubmitCredentials(
-                    department,
-                    String(form.get("accessEmail") || "").trim(),
-                    String(form.get("accessPassword") || ""),
-                  );
-                }}
-              >
-                <div className="door-terminal-head">
-                  <div>
-                    <span>ACESSO RESTRITO</span>
-                    <strong>{department.label}</strong>
-                  </div>
-                  <button
-                    type="button"
-                    aria-label="Fechar terminal"
-                    onClick={onCloseAccess}
-                  >
-                    ×
-                  </button>
+              accessGranted ? (
+                <div className="door-terminal door-terminal--granted">
+                  <span>ACESSO AUTORIZADO</span>
+                  <strong>Credenciais confirmadas.</strong>
+                  <p>A abrir a porta...</p>
                 </div>
-
-                <p>Introduza as suas credenciais para abrir esta porta.</p>
-
-                <label>
-                  Email
-                  <input
-                    name="accessEmail"
-                    type="email"
-                    placeholder="email@empresa.com"
-                    autoComplete="username"
-                    required
-                    autoFocus
-                  />
-                </label>
-
-                <label>
-                  Password
-                  <input
-                    name="accessPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                    required
-                  />
-                </label>
-
-                {accessError && (
-                  <div className="door-terminal-error">{accessError}</div>
-                )}
-
-                <button
-                  className="door-terminal-submit"
-                  type="submit"
-                  disabled={accessLoading}
+              ) : (
+                <form
+                  className="door-terminal"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const form = new FormData(event.currentTarget);
+                    onSubmitCredentials(
+                      department,
+                      String(form.get("accessEmail") || "").trim(),
+                      String(form.get("accessPassword") || ""),
+                    );
+                  }}
                 >
-                  {accessLoading ? "A validar..." : "Abrir porta"}
-                  <span>→</span>
-                </button>
-              </form>
+                  <div className="door-terminal-head">
+                    <div>
+                      <span>PORTAL DE ACESSO</span>
+                      <strong>{department.label}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label="Fechar terminal"
+                      onClick={onCloseAccess}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  <div className="door-terminal-section-title">
+                    <span>JÁ TEM ACESSO?</span>
+                    <p>Introduza as credenciais atribuídas a si.</p>
+                  </div>
+
+                  <label>
+                    Email
+                    <input
+                      name="accessEmail"
+                      type="email"
+                      placeholder="email@empresa.com"
+                      autoComplete="username"
+                      required
+                      autoFocus
+                    />
+                  </label>
+
+                  <label>
+                    Password
+                    <input
+                      name="accessPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                      required
+                    />
+                  </label>
+
+                  {accessError && (
+                    <div className="door-terminal-error">{accessError}</div>
+                  )}
+
+                  <button
+                    className="door-terminal-submit"
+                    type="submit"
+                    disabled={accessLoading}
+                  >
+                    {accessLoading ? "A validar..." : "Entrar"}
+                    <span>→</span>
+                  </button>
+
+                  <div className="door-terminal-request">
+                    <span>NÃO TEM ACESSO?</span>
+                    <a
+                      href={
+                        process.env.NEXT_PUBLIC_ACCESS_PORTAL_URL ||
+                        "/portal/access"
+                      }
+                    >
+                      Pedir acesso no portal <strong>↗</strong>
+                    </a>
+                  </div>
+                </form>
+              )
             ) : doorNearby ? (
               <button
                 className="door-access-pop"
@@ -1056,7 +1082,7 @@ function Player({
     p.z = THREE.MathUtils.clamp(p.z, PATH_MIN_Z, PATH_MAX_Z);
 
     let lockedDoor: Department | null = null;
-    let lockedDoorDistance = 1.55;
+    let lockedDoorDistance = 1.2;
 
     for (const department of departments) {
       if (
@@ -1179,6 +1205,7 @@ function World({
   restrictedDepartmentId,
   accessError,
   accessLoading,
+  accessGrantedDepartmentId,
   onSubmitCredentials,
   onCloseAccess,
   receptionCleared,
@@ -1193,6 +1220,7 @@ function World({
   restrictedDepartmentId: Department["id"] | null;
   accessError: string;
   accessLoading: boolean;
+  accessGrantedDepartmentId: Department["id"] | null;
   onSubmitCredentials: Props["onSubmitCredentials"];
   onCloseAccess: Props["onCloseAccess"];
   receptionCleared: boolean;
@@ -1201,6 +1229,15 @@ function World({
   const [moveRequest, setMoveRequest] = useState<MoveRequest | null>(null);
   const [nearLockedDoor, setNearLockedDoor] = useState<Department | null>(null);
   const moveSequence = useRef(0);
+
+  useEffect(() => {
+    if (
+      restrictedDepartmentId &&
+      nearLockedDoor?.id !== restrictedDepartmentId
+    ) {
+      onCloseAccess();
+    }
+  }, [nearLockedDoor, onCloseAccess, restrictedDepartmentId]);
 
   const requestMove = (point: THREE.Vector3, interact?: Department) => {
     moveSequence.current += 1;
@@ -1323,6 +1360,7 @@ function World({
           accessActive={restrictedDepartmentId === department.id}
           accessError={accessError}
           accessLoading={accessLoading}
+          accessGranted={accessGrantedDepartmentId === department.id}
           onSubmitCredentials={onSubmitCredentials}
           onCloseAccess={onCloseAccess}
           doorNearby={nearLockedDoor?.id === department.id}
@@ -1375,6 +1413,7 @@ export default function OfficeScene({
   restrictedDepartmentId,
   accessError,
   accessLoading,
+  accessGrantedDepartmentId,
   onSubmitCredentials,
   onCloseAccess,
   receptionCleared,
@@ -1417,6 +1456,7 @@ export default function OfficeScene({
         restrictedDepartmentId={restrictedDepartmentId}
         accessError={accessError}
         accessLoading={accessLoading}
+        accessGrantedDepartmentId={accessGrantedDepartmentId}
         onSubmitCredentials={onSubmitCredentials}
         onCloseAccess={onCloseAccess}
         receptionCleared={receptionCleared}
