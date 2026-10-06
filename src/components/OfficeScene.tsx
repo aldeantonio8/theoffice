@@ -25,6 +25,8 @@ type Props = {
   ) => void;
   onCloseAccess: () => void;
   receptionCleared: boolean;
+  receptionDialogueStep: 0 | 1 | 2;
+  receptionPlayerReply: string;
 };
 
 const WALL_HEIGHT = 1.45;
@@ -684,14 +686,32 @@ function GlassDoor({
   );
 }
 
+function SpeechBubble({
+  text,
+  tone = "npc",
+}: {
+  text: string;
+  tone?: "npc" | "player";
+}) {
+  return (
+    <Html position={[0, 2.34, 0]} center>
+      <div className={`world-speech world-speech--${tone}`}>
+        {text}
+      </div>
+    </Html>
+  );
+}
+
 function NPC({
   department,
   active,
   onApproach,
+  speech,
 }: {
   department: Department;
   active: boolean;
   onApproach: (department: Department) => void;
+  speech?: string;
 }) {
   const [hovered, setHovered] = useState(false);
   const ref = useRef<THREE.Group>(null);
@@ -733,7 +753,7 @@ function NPC({
         </mesh>
       )}
 
-      {(active || hovered) && (
+      {!speech && (active || hovered) && (
         <Html position={[0, 2.08, 0]} center>
           <div className={`npc-tag ${active ? "npc-tag--active" : ""}`}>
             <strong>{department.id === "reception" ? "Mina" : department.npcName}</strong>
@@ -741,6 +761,8 @@ function NPC({
           </div>
         </Html>
       )}
+
+      {speech && <SpeechBubble text={speech} tone="npc" />}
     </group>
   );
 }
@@ -1185,6 +1207,7 @@ function Player({
   onDoorNearby,
   onLockedDoorNearby,
   onRequestAccess,
+  speech,
 }: {
   onNearby: Props["onNearby"];
   onAreaChange: Props["onAreaChange"];
@@ -1198,6 +1221,7 @@ function Player({
   onDoorNearby: (department: Department | null) => void;
   onLockedDoorNearby: (department: Department | null) => void;
   onRequestAccess: (department: Department) => void;
+  speech?: string;
 }) {
   const ref = useRef<THREE.Group>(null);
   const keys = useRef<Record<string, boolean>>({});
@@ -1474,9 +1498,12 @@ function Player({
   return (
     <group ref={ref} position={[0, 0, 4.35]}>
       <HumanAvatar variante="visitor" estado={moving ? "andar" : "parado"} />
-      <Html position={[0, 2.08, 0]} center>
-        <div className="player-label">VOCÊ</div>
-      </Html>
+      {!speech && (
+        <Html position={[0, 2.08, 0]} center>
+          <div className="player-label">VOCÊ</div>
+        </Html>
+      )}
+      {speech && <SpeechBubble text={speech} tone="player" />}
     </group>
   );
 }
@@ -1509,6 +1536,8 @@ function World({
   onSubmitCredentials,
   onCloseAccess,
   receptionCleared,
+  receptionDialogueStep,
+  receptionPlayerReply,
 }: {
   selected: Department | null;
   nearby: Department | null;
@@ -1524,6 +1553,8 @@ function World({
   onSubmitCredentials: Props["onSubmitCredentials"];
   onCloseAccess: Props["onCloseAccess"];
   receptionCleared: boolean;
+  receptionDialogueStep: 0 | 1 | 2;
+  receptionPlayerReply: string;
 }) {
   const [moveRequest, setMoveRequest] = useState<MoveRequest | null>(null);
   const [nearDoor, setNearDoor] = useState<Department | null>(null);
@@ -1561,6 +1592,23 @@ function World({
 
     requestMove(getApproachPoint(department), department);
   };
+
+  const minaSpeech =
+    selected?.id === "reception" && !receptionCleared
+      ? receptionDialogueStep === 0
+        ? "Olá 👋 Bem-vindo ao The Office."
+        : receptionDialogueStep === 1
+          ? "Antes de continuar, diga-me: o que o trouxe até aqui hoje?"
+          : "Perfeito. Pode avançar. Algumas áreas são restritas e podem pedir credenciais."
+      : undefined;
+
+  const playerSpeech =
+    selected?.id === "reception" &&
+    !receptionCleared &&
+    receptionDialogueStep === 2 &&
+    receptionPlayerReply
+      ? receptionPlayerReply
+      : undefined;
 
   return (
     <>
@@ -1656,6 +1704,7 @@ function World({
             nearby?.id === department.id
           }
           onApproach={approachDepartment}
+          speech={department.id === "reception" ? minaSpeech : undefined}
         />
       ))}
 
@@ -1694,6 +1743,7 @@ function World({
         onDoorNearby={setNearDoor}
         onLockedDoorNearby={setNearLockedDoor}
         onRequestAccess={onRestrictedAttempt}
+        speech={playerSpeech}
       />
     </>
   );
@@ -1713,6 +1763,8 @@ export default function OfficeScene({
   onSubmitCredentials,
   onCloseAccess,
   receptionCleared,
+  receptionDialogueStep,
+  receptionPlayerReply,
 }: Props) {
   const [selected, setSelected] = useState<Department | null>(null);
   const [nearby, setNearby] = useState<Department | null>(null);
@@ -1761,6 +1813,8 @@ export default function OfficeScene({
         onSubmitCredentials={onSubmitCredentials}
         onCloseAccess={onCloseAccess}
         receptionCleared={receptionCleared}
+        receptionDialogueStep={receptionDialogueStep}
+        receptionPlayerReply={receptionPlayerReply}
       />
     </Canvas>
   );
