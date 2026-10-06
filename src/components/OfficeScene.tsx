@@ -580,9 +580,11 @@ function NPC({
   const ref = useRef<THREE.Group>(null);
   const [x, , z] = department.npcPosition;
   const variante =
-    department.id === "reception" || department.id === "hr" || department.id === "projects"
-      ? "feminino"
-      : "masculino";
+    department.id === "reception"
+      ? "mina"
+      : department.id === "operations" || department.id === "director"
+        ? "team01"
+        : "team02";
 
   useFrame(({ clock }) => {
     if (!ref.current) return;
@@ -614,7 +616,7 @@ function NPC({
 
       <Html position={[0, 2.08, 0]} center>
         <div className={`npc-tag ${active ? "npc-tag--active" : ""}`}>
-          <strong>{department.npcName}</strong>
+          <strong>{department.id === "reception" ? "Mina" : department.npcName}</strong>
           <span>{department.npcRole}</span>
         </div>
       </Html>
@@ -1298,7 +1300,7 @@ function Player({
 
   return (
     <group ref={ref} position={[0, 0, 4.35]}>
-      <HumanAvatar variante="masculino" estado={moving ? "andar" : "parado"} />
+      <HumanAvatar variante="visitor" estado={moving ? "andar" : "parado"} />
       <Html position={[0, 2.08, 0]} center>
         <div className="player-label">VOCÊ</div>
       </Html>
