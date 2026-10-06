@@ -359,14 +359,24 @@ function getApproachPoint(department: Department) {
 
 function getDoorWorldPosition(department: Department) {
   const [x, , z] = department.position;
-  const [width] = department.size;
-  const innerWallX = x < 0 ? width / 2 : -width / 2;
+  const [width, , depth] = department.size;
 
+  if (department.id === "reception") {
+    return new THREE.Vector3(x, 0, z - depth / 2 + 0.02);
+  }
+
+  const innerWallX = x < 0 ? width / 2 : -width / 2;
   return new THREE.Vector3(x + innerWallX, 0, z + 0.35);
 }
 
 function getDoorApproachPoint(department: Department) {
   const door = getDoorWorldPosition(department);
+
+  if (department.id === "reception") {
+    door.z += 0.82;
+    return door;
+  }
+
   door.x += department.position[0] < 0 ? 0.85 : -0.85;
   return door;
 }
@@ -525,20 +535,24 @@ function GlassDoor({
   rotation = 0,
   open = false,
   restricted = false,
+  variant = "standard",
 }: {
   position: [number, number, number];
   rotation?: number;
   open?: boolean;
   restricted?: boolean;
+  variant?: "standard" | "reception";
 }) {
   const hinge = useRef<THREE.Group>(null);
-  const doorWidth = 0.96;
-  const doorHeight = 2.18;
-  const frame = 0.075;
+  const isReceptionDoor = variant === "reception";
+  const doorWidth = isReceptionDoor ? 1.04 : 0.96;
+  const doorHeight = isReceptionDoor ? 2.1 : 2.18;
+  const frame = isReceptionDoor ? 0.06 : 0.075;
 
   useFrame((_, delta) => {
     if (!hinge.current) return;
-    const target = open ? (rotation > 0 ? -1.08 : 1.08) : 0;
+    const openAngle = isReceptionDoor ? 1.22 : 1.08;
+    const target = open ? (rotation > 0 ? -openAngle : openAngle) : 0;
     hinge.current.rotation.y = THREE.MathUtils.damp(
       hinge.current.rotation.y,
       target,
@@ -575,10 +589,16 @@ function GlassDoor({
           <mesh position={[0, doorHeight / 2, 0]} castShadow receiveShadow>
             <boxGeometry args={[doorWidth, doorHeight, 0.055]} />
             <meshStandardMaterial
-              color={restricted ? "#a9b0ad" : "#d5d8d4"}
+              color={
+                isReceptionDoor
+                  ? "#e6e8e5"
+                  : restricted
+                    ? "#a9b0ad"
+                    : "#d5d8d4"
+              }
               transparent
-              opacity={restricted ? 0.48 : 0.34}
-              roughness={0.26}
+              opacity={isReceptionDoor ? 0.18 : restricted ? 0.48 : 0.34}
+              roughness={isReceptionDoor ? 0.12 : 0.26}
               metalness={0.02}
             />
           </mesh>
@@ -602,27 +622,40 @@ function GlassDoor({
           {/* Real pull handle */}
           <mesh position={[0.31, 1.08, 0.105]} castShadow>
             <boxGeometry args={[0.035, 0.42, 0.035]} />
-            <meshStandardMaterial color="#d5d7d2" metalness={0.85} roughness={0.2} />
+            <meshStandardMaterial
+              color={isReceptionDoor ? "#171918" : "#d5d7d2"}
+              metalness={0.78}
+              roughness={0.24}
+            />
           </mesh>
           <mesh position={[0.31, 0.87, 0.075]} castShadow>
             <boxGeometry args={[0.11, 0.035, 0.055]} />
-            <meshStandardMaterial color="#d5d7d2" metalness={0.85} roughness={0.2} />
+            <meshStandardMaterial
+              color={isReceptionDoor ? "#171918" : "#d5d7d2"}
+              metalness={0.78}
+              roughness={0.24}
+            />
           </mesh>
           <mesh position={[0.31, 1.29, 0.075]} castShadow>
             <boxGeometry args={[0.11, 0.035, 0.055]} />
-            <meshStandardMaterial color="#d5d7d2" metalness={0.85} roughness={0.2} />
-          </mesh>
-
-          {/* Frosted privacy band */}
-          <mesh position={[0, 1.08, 0.035]}>
-            <boxGeometry args={[0.78, 0.34, 0.012]} />
             <meshStandardMaterial
-              color="#dce2df"
-              transparent
-              opacity={0.3}
-              roughness={0.78}
+              color={isReceptionDoor ? "#171918" : "#d5d7d2"}
+              metalness={0.78}
+              roughness={0.24}
             />
           </mesh>
+
+          {!isReceptionDoor && (
+            <mesh position={[0, 1.08, 0.035]}>
+              <boxGeometry args={[0.78, 0.34, 0.012]} />
+              <meshStandardMaterial
+                color="#dce2df"
+                transparent
+                opacity={0.3}
+                roughness={0.78}
+              />
+            </mesh>
+          )}
         </group>
       </group>
 
@@ -881,10 +914,29 @@ function Room({
         />
       </mesh>
 
-      <Wall
-        position={[0, WALL_HEIGHT / 2, -d / 2]}
-        size={[w, WALL_HEIGHT, WALL_THICKNESS]}
-      />
+      {isReception ? (
+        <>
+          <Wall
+            position={[-(w / 4 + 0.29), WALL_HEIGHT / 2, -d / 2]}
+            size={[w / 2 - 0.58, WALL_HEIGHT, WALL_THICKNESS]}
+          />
+          <Wall
+            position={[(w / 4 + 0.29), WALL_HEIGHT / 2, -d / 2]}
+            size={[w / 2 - 0.58, WALL_HEIGHT, WALL_THICKNESS]}
+          />
+          <GlassDoor
+            position={[0, 0, -d / 2 + 0.025]}
+            rotation={0}
+            open={receptionCleared && doorNearby}
+            variant="reception"
+          />
+        </>
+      ) : (
+        <Wall
+          position={[0, WALL_HEIGHT / 2, -d / 2]}
+          size={[w, WALL_HEIGHT, WALL_THICKNESS]}
+        />
+      )}
 
       {isLeft && (
         <Wall
@@ -935,7 +987,7 @@ function Room({
         <RoomPlate
           department={department}
           unlocked={true}
-          position={[1.62, 1.18, -d / 2 + 0.075]}
+          position={[0.88, 1.15, -d / 2 + 0.075]}
         />
       )}
 
@@ -1341,8 +1393,6 @@ function Player({
     let nearestDoorDistance = 1.25;
 
     for (const department of departments) {
-      if (department.id === "reception") continue;
-
       const door = getDoorWorldPosition(department);
       const distance = Math.hypot(p.x - door.x, p.z - door.z);
 
@@ -1571,28 +1621,6 @@ function World({
         size={[WALL_THICKNESS, WALL_HEIGHT, 21.5]}
         color="#f1eee8"
       />
-
-      <group position={[0, 0, 0.56]}>
-        <mesh position={[-1.2, 0.55, 0]} castShadow>
-          <boxGeometry args={[0.1, 1.1, 0.1]} />
-          <meshStandardMaterial color="#343834" />
-        </mesh>
-        <mesh position={[1.2, 0.55, 0]} castShadow>
-          <boxGeometry args={[0.1, 1.1, 0.1]} />
-          <meshStandardMaterial color="#343834" />
-        </mesh>
-        {!receptionCleared && (
-          <>
-            <mesh position={[0, 0.78, 0]} castShadow>
-              <boxGeometry args={[2.35, 0.08, 0.08]} />
-              <meshStandardMaterial color="#171b17" />
-            </mesh>
-            <Html position={[0, 1.25, 0]} center>
-              <div className="reception-gate-label">FALE COM A MINA PARA CONTINUAR</div>
-            </Html>
-          </>
-        )}
-      </group>
 
       {departments.map((department) => (
         <Room
