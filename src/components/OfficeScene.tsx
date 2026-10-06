@@ -9,10 +9,58 @@ import { Department, departments } from "./officeData";
 type Props = {
   onSelect: (department: Department) => void;
   onNearby: (department: Department | null) => void;
+  activeDepartmentId: Department["id"] | null;
 };
 
 const WALL_HEIGHT = 1.6;
 const WALL_THICKNESS = 0.12;
+
+function isWalkable(x: number, z: number) {
+  const inRect = (
+    px: number,
+    pz: number,
+    cx: number,
+    cz: number,
+    width: number,
+    depth: number,
+  ) => Math.abs(px - cx) <= width / 2 && Math.abs(pz - cz) <= depth / 2;
+
+  // Main circulation spine and entrance.
+  if (inRect(x, z, 0, -2.55, 3.15, 15.4)) return true;
+  if (inRect(x, z, 0, 4.55, 3.7, 1.4)) return true;
+
+  // Reception opens directly into the circulation spine.
+  const reception = departments.find((department) => department.id === "reception");
+  if (
+    reception &&
+    inRect(
+      x,
+      z,
+      reception.position[0],
+      reception.position[2],
+      reception.size[0] - 0.28,
+      reception.size[2] - 0.28,
+    )
+  ) {
+    return true;
+  }
+
+  // Side rooms are bounded, except for a narrow doorway bridge to the corridor.
+  for (const department of departments) {
+    if (department.id === "reception") continue;
+
+    const [cx, , cz] = department.position;
+    const [width, , depth] = department.size;
+
+    if (inRect(x, z, cx, cz, width - 0.36, depth - 0.36)) return true;
+
+    const doorZ = cz + 0.35;
+    const connectorX = cx < 0 ? -2.03 : 2.03;
+    if (inRect(x, z, connectorX, doorZ, 1.45, 1.35)) return true;
+  }
+
+  return false;
+}
 
 function Wall({
   position,
@@ -166,12 +214,23 @@ function Sofa({ position }: { position: [number, number, number] }) {
 function GlassDoor({
   position,
   rotation = 0,
+  open = false,
 }: {
   position: [number, number, number];
   rotation?: number;
+  open?: boolean;
 }) {
+  const ref = useRef<THREE.Group>(null);
+
+  useFrame(() => {
+    if (!ref.current) return;
+    const direction = rotation > 0 ? 1 : -1;
+    const target = open ? rotation + direction * 0.82 : rotation;
+    ref.current.rotation.y = THREE.MathUtils.lerp(ref.current.rotation.y, target, 0.08);
+  });
+
   return (
-    <group position={position} rotation={[0, rotation, 0]}>
+    <group ref={ref} position={position} rotation={[0, rotation, 0]}>
       <mesh position={[0, 0.78, 0]} castShadow>
         <boxGeometry args={[0.82, 1.5, 0.035]} />
         <meshPhysicalMaterial
@@ -372,7 +431,8 @@ function Room({
           />
           <GlassDoor
             position={[innerWallX + (isLeft ? -0.04 : 0.04), 0, 0.35]}
-            rotation={doorRotation + (isLeft ? -0.65 : 0.65)}
+            rotation={doorRotation}
+            open={active}
           />
         </>
       )}
@@ -447,8 +507,13 @@ function Player({
       (keys.current.w || keys.current.arrowup ? 1 : 0);
 
     if (dx || dz) {
-      p.x += dx * speed;
-      p.z += dz * speed;
+      const magnitude = Math.hypot(dx, dz) || 1;
+      const nextX = p.x + (dx / magnitude) * speed;
+      const nextZ = p.z + (dz / magnitude) * speed;
+
+      if (isWalkable(nextX, p.z)) p.x = nextX;
+      if (isWalkable(p.x, nextZ)) p.z = nextZ;
+
       walkTime.current += delta * 9;
       ref.current.rotation.y = Math.atan2(dx, dz);
       ref.current.position.y = Math.abs(Math.sin(walkTime.current)) * 0.035;
@@ -586,7 +651,7 @@ function World({
         <Room
           key={department.id}
           department={department}
-          active={selected?.id === department.id}
+          active={selected?.id === department.id || nearby?.id === department.id}
           onSelect={onSelect}
         />
       ))}
@@ -605,9 +670,17 @@ function World({
   );
 }
 
-export default function OfficeScene({ onSelect, onNearby }: Props) {
+export default function OfficeScene({ onSelect, onNearby, activeDepartmentId }: Props) {
   const [selected, setSelected] = useState<Department | null>(null);
   const [nearby, setNearby] = useState<Department | null>(null);
+
+  useEffect(() => {
+    setSelected(
+      activeDepartmentId
+        ? departments.find((department) => department.id === activeDepartmentId) ?? null
+        : null,
+    );
+  }, [activeDepartmentId]);
 
   const select = (department: Department) => {
     setSelected(department);
