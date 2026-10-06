@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import OfficeScene from "./OfficeScene";
 import { Department, departments } from "./officeData";
 
@@ -77,6 +77,36 @@ export default function OfficeExperience() {
   const [submitted, setSubmitted] = useState(false);
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [currentArea, setCurrentArea] = useState<Department | null>(null);
+  const [visited, setVisited] = useState<Department["id"][]>([]);
+
+  const handleSelect = (department: Department) => {
+    setSelected(department);
+    setVisited((current) =>
+      current.includes(department.id) ? current : [...current, department.id],
+    );
+  };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+
+      if (panel) {
+        setPanel(null);
+        setSubmitted(false);
+        return;
+      }
+
+      if (directoryOpen) {
+        setDirectoryOpen(false);
+        return;
+      }
+
+      if (selected) setSelected(null);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [panel, directoryOpen, selected]);
 
   const openPanel = (next: Panel) => {
     setSubmitted(false);
@@ -129,7 +159,7 @@ export default function OfficeExperience() {
 
       <section className="scene-shell" aria-label="Interactive 3D office">
         <OfficeScene
-          onSelect={setSelected}
+          onSelect={handleSelect}
           onNearby={setNearby}
           onAreaChange={setCurrentArea}
           activeDepartmentId={selected?.id ?? null}
@@ -157,7 +187,7 @@ export default function OfficeExperience() {
                 key={department.id}
                 type="button"
                 onClick={() => {
-                  setSelected(department);
+                  handleSelect(department);
                   setDirectoryOpen(false);
                 }}
               >
@@ -212,8 +242,21 @@ export default function OfficeExperience() {
           </div>
         </div>
 
+        {entered && (
+          <div className="objective-card">
+            <span>Current objective</span>
+            <strong>
+              {visited.length === 0
+                ? "Meet Mia at Reception"
+                : visited.length < departments.length
+                  ? `Explore the office · ${visited.length}/${departments.length}`
+                  : "Office tour complete"}
+            </strong>
+          </div>
+        )}
+
         {nearby && !selected && (
-          <button className="talk-prompt" type="button" onClick={() => setSelected(nearby)}>
+          <button className="talk-prompt" type="button" onClick={() => handleSelect(nearby)}>
             <span className="talk-key">E</span>
             Talk to {nearby.npcName}
           </button>
@@ -226,7 +269,8 @@ export default function OfficeExperience() {
                 {selected.npcName} · {selected.npcRole}
               </span>
               <button type="button" aria-label="Close conversation" onClick={() => setSelected(null)}>
-                ×
+                <span aria-hidden="true">×</span>
+                <small>ESC</small>
               </button>
             </div>
             <span className="eyebrow">{selected.eyebrow}</span>
@@ -436,6 +480,11 @@ export default function OfficeExperience() {
               Enter the office
               <span>→</span>
             </button>
+            <div className="intro-controls">
+              <span>WASD to move</span>
+              <span>E to interact</span>
+              <span>ESC to close</span>
+            </div>
           </div>
           <div className="intro-footer">
             <span>3D / WEB EXPERIENCE</span>
