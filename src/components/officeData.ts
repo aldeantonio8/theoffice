@@ -20,6 +20,7 @@ export type Department = {
   position: [number, number, number];
   size: [number, number, number];
   npcPosition: [number, number, number];
+  requiresCredentials?: boolean;
 };
 
 export const departments: Department[] = [
@@ -78,6 +79,7 @@ export const departments: Department[] = [
     position: [-5.2, 0, -7.4],
     size: [5.4, 0, 4.2],
     npcPosition: [-4.2, 0, -6.8],
+    requiresCredentials: true,
   },
   {
     id: "director",
@@ -92,6 +94,7 @@ export const departments: Department[] = [
     position: [5.2, 0, -7.4],
     size: [5.4, 0, 4.2],
     npcPosition: [4.2, 0, -6.8],
+    requiresCredentials: true,
   },
   {
     id: "projects",
@@ -106,6 +109,7 @@ export const departments: Department[] = [
     position: [-5.2, 0, -12.5],
     size: [5.4, 0, 4.2],
     npcPosition: [-4.2, 0, -11.9],
+    requiresCredentials: true,
   },
   {
     id: "meeting",
