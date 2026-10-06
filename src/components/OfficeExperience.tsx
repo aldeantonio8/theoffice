@@ -374,7 +374,24 @@ export default function OfficeExperience() {
                 </div>
                 <div className="info-panel-body">
                   <p>{infoPanel.body}</p>
-                  {infoPanel.items && (
+                  {infoPanel.items && panel === "projects" ? (
+                    <div className="project-grid">
+                      {infoPanel.items.map((item, index) => (
+                        <article key={item} className="project-card">
+                          <span>0{index + 1}</span>
+                          <div>
+                            <small>Projeto selecionado</small>
+                            <h3>{item.replace(/^Caso \d+ — /, "")}</h3>
+                            <p>
+                              Caso demonstrativo do portfólio. Aqui poderemos apresentar o desafio,
+                              a solução, o processo e os resultados do projeto.
+                            </p>
+                          </div>
+                          <button type="button">Ver caso →</button>
+                        </article>
+                      ))}
+                    </div>
+                  ) : infoPanel.items ? (
                     <div className="info-grid">
                       {infoPanel.items.map((item, index) => (
                         <div key={item} className="info-row">
@@ -383,7 +400,7 @@ export default function OfficeExperience() {
                         </div>
                       ))}
                     </div>
-                  )}
+                  ) : null}
                   <button className="panel-back" type="button" onClick={closePanel}>
                     Voltar ao escritório <span>→</span>
                   </button>
