@@ -27,7 +27,7 @@ function isWalkable(x: number, z: number) {
   ) => Math.abs(px - cx) <= width / 2 && Math.abs(pz - cz) <= depth / 2;
 
   // Main circulation spine and entrance.
-  if (inRect(x, z, 0, -2.55, 3.15, 15.4)) return true;
+  if (inRect(x, z, 0, -5.1, 3.15, 20.6)) return true;
   if (inRect(x, z, 0, 4.55, 3.7, 1.4)) return true;
 
   // Reception opens directly into the circulation spine.
@@ -384,6 +384,43 @@ function DepartmentProps({ department }: { department: Department }) {
     );
   }
 
+  if (id === "projects") {
+    return (
+      <>
+        {[-1.45, 0, 1.45].map((x, index) => (
+          <group key={x} position={[x, 0, 0.9]}>
+            <mesh position={[0, 0.52, 0]} castShadow>
+              <boxGeometry args={[0.95, 1.02, 0.55]} />
+              <meshStandardMaterial color={index === 1 ? "#d9ff65" : "#8d9187"} roughness={0.9} />
+            </mesh>
+            <mesh position={[0, 1.08, -0.12]}>
+              <boxGeometry args={[0.72, 0.36, 0.035]} />
+              <meshStandardMaterial color="#222521" emissive="#182018" emissiveIntensity={0.25} />
+            </mesh>
+          </group>
+        ))}
+      </>
+    );
+  }
+
+  if (id === "meeting") {
+    return (
+      <>
+        <mesh position={[0, 0.5, 0.4]} castShadow>
+          <boxGeometry args={[2.7, 0.12, 1.15]} />
+          <meshStandardMaterial color="#5f625b" roughness={0.82} />
+        </mesh>
+        {[-1.25, -0.4, 0.4, 1.25].map((x) => (
+          <Chair key={x} position={[x, 0, 1.18]} rotation={Math.PI} />
+        ))}
+        <mesh position={[0, 1.06, -2.04]}>
+          <boxGeometry args={[1.9, 0.92, 0.05]} />
+          <meshStandardMaterial color="#20231f" emissive="#283426" emissiveIntensity={0.28} />
+        </mesh>
+      </>
+    );
+  }
+
   return (
     <>
       <Chair position={[-1.45, 0, 1]} />
@@ -545,7 +582,7 @@ function Player({
     }
 
     p.x = THREE.MathUtils.clamp(p.x, -8.35, 8.35);
-    p.z = THREE.MathUtils.clamp(p.z, -10.1, 5.15);
+    p.z = THREE.MathUtils.clamp(p.z, -15.2, 5.15);
 
     let nearest: Department | null = null;
     let nearestDistance = 1.72;
@@ -638,7 +675,7 @@ function Player({
 function CeilingLights() {
   return (
     <>
-      {[-6.5, -2.5, 1.5].map((z) => (
+      {[-11.5, -7.5, -3.5, 0.5, 2.5].map((z) => (
         <group key={z}>
           <pointLight position={[-4.6, 4.2, z]} intensity={16} distance={8} decay={2.1} />
           <pointLight position={[4.6, 4.2, z]} intensity={16} distance={8} decay={2.1} />
@@ -661,12 +698,12 @@ function World({
   onNearby: Props["onNearby"];
   onAreaChange: Props["onAreaChange"];
 }) {
-  const grid = useMemo(() => new THREE.GridHelper(22, 22, "#8b8e86", "#c4c7bf"), []);
+  const grid = useMemo(() => new THREE.GridHelper(28, 28, "#8b8e86", "#c4c7bf"), []);
 
   return (
     <>
       <color attach="background" args={["#e9ece5"]} />
-      <fog attach="fog" args={["#e9ece5", 19, 34]} />
+      <fog attach="fog" args={["#e9ece5", 22, 42]} />
       <ambientLight intensity={1.6} />
       <directionalLight
         position={[8, 14, 8]}
@@ -676,14 +713,14 @@ function World({
       />
       <CeilingLights />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, -2.7]} receiveShadow>
-        <planeGeometry args={[19, 17]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, -5.25]} receiveShadow>
+        <planeGeometry args={[19, 22]} />
         <meshStandardMaterial color="#c9cbc3" roughness={1} />
       </mesh>
-      <primitive object={grid} position={[0, 0.005, -2.7]} />
+      <primitive object={grid} position={[0, 0.005, -5.25]} />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, -4.8]} receiveShadow>
-        <planeGeometry args={[3.3, 11.2]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, -7.35]} receiveShadow>
+        <planeGeometry args={[3.3, 16.3]} />
         <meshStandardMaterial color="#e9e8e0" roughness={1} />
       </mesh>
 
@@ -700,8 +737,8 @@ function World({
         ENTER THE OFFICE
       </Text>
 
-      <Wall position={[-9.05, 0.8, -2.6]} size={[0.12, 1.6, 16.4]} color="#bfc2ba" />
-      <Wall position={[9.05, 0.8, -2.6]} size={[0.12, 1.6, 16.4]} color="#bfc2ba" />
+      <Wall position={[-9.05, 0.8, -5.15]} size={[0.12, 1.6, 21.5]} color="#bfc2ba" />
+      <Wall position={[9.05, 0.8, -5.15]} size={[0.12, 1.6, 21.5]} color="#bfc2ba" />
 
       {departments.map((department) => (
         <Room
