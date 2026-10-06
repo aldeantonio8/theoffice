@@ -1603,3 +1603,109 @@ button {
     width: auto;
   }
 }
+
+.door-terminal {
+  width: 260px;
+  padding: 12px;
+  background: rgba(23,27,23,.96);
+  color: white;
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: 0 18px 55px rgba(0,0,0,.24);
+  backdrop-filter: blur(10px);
+}
+
+.door-terminal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.door-terminal-head > div {
+  display: grid;
+  gap: 2px;
+}
+
+.door-terminal-head span {
+  font-size: 7px;
+  letter-spacing: .11em;
+  opacity: .52;
+}
+
+.door-terminal-head strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.door-terminal-head button {
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: transparent;
+  color: white;
+  cursor: pointer;
+}
+
+.door-terminal > p {
+  margin: 0 0 12px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: rgba(255,255,255,.62);
+}
+
+.door-terminal label {
+  display: grid;
+  gap: 5px;
+  padding: 9px 0;
+  border-top: 1px solid rgba(255,255,255,.1);
+  font-size: 7px;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  color: rgba(255,255,255,.5);
+}
+
+.door-terminal input {
+  width: 100%;
+  padding: 7px 0;
+  border: 0;
+  border-bottom: 1px solid rgba(255,255,255,.14);
+  outline: 0;
+  background: transparent;
+  color: white;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.door-terminal input::placeholder {
+  color: rgba(255,255,255,.28);
+}
+
+.door-terminal-error {
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid rgba(255,106,106,.25);
+  background: rgba(255,106,106,.08);
+  color: #ffb3b3;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.door-terminal-submit {
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px 10px;
+  display: flex;
+  justify-content: space-between;
+  border: 1px solid var(--acid);
+  background: var(--acid);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.door-terminal-submit:disabled {
+  opacity: .55;
+  cursor: wait;
+}
