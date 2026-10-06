@@ -31,7 +31,7 @@ export const departments: Department[] = [
     title: "Bem-vindo ao The Office.",
     body: "Este não é um website normal. Caminhe pelo escritório, conheça os departamentos e descubra a empresa através de conversas.",
     actions: ["Iniciar visita", "Como funciona?"],
-    npcName: "Mia",
+    npcName: "Mina",
     npcRole: "Receção",
     greeting: "Olá! Bem-vindo ao The Office. Para onde gostaria de ir?",
     position: [0, 0, 2.3],
