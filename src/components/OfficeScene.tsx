@@ -9,6 +9,7 @@ import { Department, departments } from "./officeData";
 type Props = {
   onSelect: (department: Department) => void;
   onNearby: (department: Department | null) => void;
+  onAreaChange: (department: Department | null) => void;
   activeDepartmentId: Department["id"] | null;
 };
 
@@ -464,17 +465,23 @@ function Room({
 
 function Player({
   onNearby,
+  onAreaChange,
   onInteract,
+  focusDepartment,
 }: {
   onNearby: Props["onNearby"];
+  onAreaChange: Props["onAreaChange"];
   onInteract: Props["onSelect"];
+  focusDepartment: Department | null;
 }) {
   const ref = useRef<THREE.Group>(null);
   const keys = useRef<Record<string, boolean>>({});
   const nearbyRef = useRef<Department | null>(null);
   const lastNearbyId = useRef<string | null>(null);
+  const lastAreaId = useRef<string | null>(null);
   const { camera } = useThree();
   const walkTime = useRef(0);
+  const lookTarget = useRef(new THREE.Vector3(0, 0.5, 0));
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
@@ -506,7 +513,7 @@ function Player({
       (keys.current.s || keys.current.arrowdown ? 1 : 0) -
       (keys.current.w || keys.current.arrowup ? 1 : 0);
 
-    if (dx || dz) {
+    if (!focusDepartment && (dx || dz)) {
       const magnitude = Math.hypot(dx, dz) || 1;
       const nextX = p.x + (dx / magnitude) * speed;
       const nextZ = p.z + (dz / magnitude) * speed;
@@ -543,9 +550,40 @@ function Player({
       onNearby(nearest);
     }
 
-    const cameraTarget = new THREE.Vector3(p.x + 5.4, 6.7, p.z + 7.2);
-    camera.position.lerp(cameraTarget, 0.06);
-    camera.lookAt(p.x, 0.38, p.z - 2);
+    let area: Department | null = null;
+    for (const department of departments) {
+      const [cx, , cz] = department.position;
+      const [width, , depth] = department.size;
+      if (
+        Math.abs(p.x - cx) <= width / 2 - 0.15 &&
+        Math.abs(p.z - cz) <= depth / 2 - 0.15
+      ) {
+        area = department;
+        break;
+      }
+    }
+
+    const areaId = area?.id ?? null;
+    if (areaId !== lastAreaId.current) {
+      lastAreaId.current = areaId;
+      onAreaChange(area);
+    }
+
+    if (focusDepartment) {
+      const [nx, , nz] = focusDepartment.npcPosition;
+      const side = nx < 0 ? 1 : -1;
+      const cameraTarget = new THREE.Vector3(nx + side * 2.1, 2.7, nz + 3.1);
+      const target = new THREE.Vector3(nx, 1.25, nz);
+      camera.position.lerp(cameraTarget, 0.075);
+      lookTarget.current.lerp(target, 0.1);
+      camera.lookAt(lookTarget.current);
+    } else {
+      const cameraTarget = new THREE.Vector3(p.x + 5.4, 6.7, p.z + 7.2);
+      const target = new THREE.Vector3(p.x, 0.38, p.z - 2);
+      camera.position.lerp(cameraTarget, 0.06);
+      lookTarget.current.lerp(target, 0.12);
+      camera.lookAt(lookTarget.current);
+    }
   });
 
   return (
@@ -599,11 +637,13 @@ function World({
   nearby,
   onSelect,
   onNearby,
+  onAreaChange,
 }: {
   selected: Department | null;
   nearby: Department | null;
   onSelect: Props["onSelect"];
   onNearby: Props["onNearby"];
+  onAreaChange: Props["onAreaChange"];
 }) {
   const grid = useMemo(() => new THREE.GridHelper(22, 22, "#8b8e86", "#c4c7bf"), []);
 
@@ -665,12 +705,22 @@ function World({
         />
       ))}
 
-      <Player onNearby={onNearby} onInteract={onSelect} />
+      <Player
+        onNearby={onNearby}
+        onAreaChange={onAreaChange}
+        onInteract={onSelect}
+        focusDepartment={selected}
+      />
     </>
   );
 }
 
-export default function OfficeScene({ onSelect, onNearby, activeDepartmentId }: Props) {
+export default function OfficeScene({
+  onSelect,
+  onNearby,
+  onAreaChange,
+  activeDepartmentId,
+}: Props) {
   const [selected, setSelected] = useState<Department | null>(null);
   const [nearby, setNearby] = useState<Department | null>(null);
 
@@ -699,6 +749,7 @@ export default function OfficeScene({ onSelect, onNearby, activeDepartmentId }: 
         nearby={nearby}
         onSelect={select}
         onNearby={nearbyChange}
+        onAreaChange={onAreaChange}
       />
     </Canvas>
   );
